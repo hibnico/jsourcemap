@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright 2015 JSourceMap contributors
+    
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+    
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<project name="jsourcemap-common-build-project"
+    xmlns:ivy="antlib:org.apache.ivy.ant"
+    xmlns:ac="antlib:net.sf.antcontrib"
+    xmlns:openpgp="antlib:org.apache.commons.openpgp.ant"
+    xmlns:andariel="antlib:andariel">
+
+    <dirname property="jsourcemap-build.dir" file="${ant.file.jsourcemap-common-build-project}" />
+    <property name="jsourcemap-root.dir" location="${jsourcemap-build.dir}/.." />
+
+    <import file="${jsourcemap-build.dir}/common-build.xml" />
+
+    <basename property="project.name" file="${basedir}" />
+	<echo>
+===========================
+Project ${project.name}
+===========================
+	</echo>
+
+    <target name="clean" description="Clean build artifacts">
+        <delete dir="${target.dir}" />
+    </target>
+
+	<target name="ivy:resolve" depends="init,ivy:configure" unless="ivy.resolved">
+        <ivy:resolve file="${basedir}/ivy-fixed.xml" conf="*" type="jar,bundle" />
+
+        <!-- to have the proper version in the ivy, and a cached resolve so the publish can work -->
+        <ivy:deliver deliverpattern="${basedir}/target/ivy.xml" pubrevision="${jsourcemap.version}" />
+        <ivy:resolve file="${basedir}/target/ivy.xml" conf="*" type="dir,jar,bundle" log="quiet" />
+
+        <ivy:cachepath pathid="ivy.default.classpath" conf="default" type="dir,jar,bundle" />
+        <ivy:deliver deliverpattern="${basedir}/target/ivy.xml" />
+        
+        <property name="ivy.resolved" value="true" />
+    </target>
+
+    <target name="update-deps" depends="init,ivy:configure" description="Update dependencies (to be called on ivy.xml change)">
+        <ivy:resolve file="${basedir}/ivy.xml" conf="*" type="jar" resolveId="update-deps" />
+        <ivy:fixdeps tofile="${basedir}/ivy-fixed.xml" resolveId="update-deps">
+            <keep org="org.hibnet" module="jsourcemap" />
+        	<keep org="org.hibnet" module="jsourcemap-test" />
+        </ivy:fixdeps>
+    </target>
+
+    <target name="create-pom" depends="init,ivy:configure,init:ant-tasks">
+        <andariel:xpath file="${basedir}/ivy.xml" expression="/ivy-module/info/description/text()" outputproperty="ivy.xml.info.description" />
+    	<ac:if>
+    		<equals arg1="${ivy.xml.info.description}" arg2="null" />
+    		<then>
+    			<property name="ivy.info.description" value="" />
+    		</then>
+    		<else>
+    			<property name="ivy.info.description" value="${ivy.xml.info.description}" />
+    		</else>
+    	</ac:if>
+        <property name="ivy.pom.version" value="${jsourcemap.version}" />
+        <ivy:makepom ivyfile="${basedir}/ivy.xml" pomfile="${target.dir}/dist/${project.name}.pom" templatefile="${jsourcemap-build.dir}/pom.template" description="${ivy.info.description}">
+            <mapping conf="default" scope="compile" />
+        </ivy:makepom>
+    </target>
+
+    <extension-point name="build" description="Build the main artifact" />
+
+	<extension-point name="dist" depends="build,create-pom" description="Build all artifacts"/>
+
+	<target name="update-deps-and-build" depends="update-deps,build" />
+
+    <target name="publish" depends="dist,init:ivy,init:publish-properties">
+        <!-- reload the settings with the proper passwords -->
+        <ivy:settings id="ivy.instance" file="${jsourcemap-build.dir}/ivysettings.xml" />
+
+        <ivy:publish organisation="org.hibnet"
+                     module="${project.name}"
+                     revision="${jsourcemap.version}"
+                     publishivy="false"
+                     artifactspattern="${target.dir}/dist/[artifact](-[classifier]).[ext]"
+                     conf="default"
+                     resolver="${publish.resolver}"
+                     overwrite="true">
+            <artifact name="${project.name}" type="ivy"     ext="pom" />
+            <artifact name="${project.name}" type="jar"     ext="jar" />
+            <artifact name="${project.name}" type="sources" ext="jar" classifier="sources" />
+            <artifact name="${project.name}" type="javadoc" ext="jar" classifier="javadoc" />
+        </ivy:publish>
+    </target>
+
+    <extension-point name="ci-build" depends="build" />
+
+</project>

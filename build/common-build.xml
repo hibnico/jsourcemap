@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright 2015 JSourceMap contributors
+    
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+    
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<project name="jsourcemap-common-build"
+    xmlns:ivy="antlib:org.apache.ivy.ant"
+    xmlns:ac="antlib:net.sf.antcontrib"
+    xmlns:openpgp="antlib:org.apache.commons.openpgp.ant">
+
+    <dirname property="jsourcemap-build.dir" file="${ant.file.jsourcemap-common-build}" />
+    <property name="jsourcemap-root.dir" location="${jsourcemap-build.dir}/.." />
+
+    <property name="target.dir" location="${basedir}/target" />
+
+    <property file="${basedir}/build.properties" />
+    <property file="${jsourcemap-build.dir}/build.properties" />
+
+    <property name="ivy.version" value="2.5.0-alpha-dev" />
+    <property name="bouncycastle.version" value="1.50" />
+    <property name="commons-openpgp.version" value="1.0-20080726.092946-4" />
+
+	<target name="-check-build-deps" unless="build-deps.downloaded">
+        <condition property="build-deps.downloaded">
+            <and>
+                <available file="${jsourcemap-build.dir}/build-deps/andariel-1.2.3/andariel-1.2.3.jar" />
+                <available file="${jsourcemap-build.dir}/build-deps/ivy-${ivy.version}.jar" />
+                <available file="${jsourcemap-build.dir}/build-deps/bcprov-jdk15on-${bouncycastle.version}.jar" />
+                <available file="${jsourcemap-build.dir}/build-deps/bcpg-jdk15on-${bouncycastle.version}.jar" />
+                <available file="${jsourcemap-build.dir}/build-deps/commons-openpgp-${commons-openpgp.version}.jar" />
+            </and>
+        </condition>
+    </target>
+
+    <target name="-download-build-deps" depends="-check-build-deps" unless="build-deps.downloaded">
+        <mkdir dir="${jsourcemap-build.dir}/build-deps" />
+
+        <get src="http://andariel.uworks.net/andariel-1.2.3.zip" dest="${jsourcemap-build.dir}/build-deps/andariel-1.2.3.zip" usetimestamp="true" />
+        <mkdir dir="${jsourcemap-build.dir}/build-deps/andariel-1.2.3" />
+        <unzip src="${jsourcemap-build.dir}/build-deps/andariel-1.2.3.zip" dest="${jsourcemap-build.dir}/build-deps/andariel-1.2.3" />
+
+        <!--get src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.version}/ivy-${ivy.version}.jar" dest="${jsourcemap-build.dir}/build-deps/ivy-${ivy.version}.jar" usetimestamp="true" /-->
+        <get src="https://builds.apache.org/job/Ivy/lastSuccessfulBuild/artifact/build/artifact/jars/ivy.jar" dest="${jsourcemap-build.dir}/build-deps/ivy-${ivy.version}.jar" usetimestamp="true" />
+        <get src="http://repo1.maven.org/maven2/org/bouncycastle/bcprov-jdk15on/${bouncycastle.version}/bcprov-jdk15on-${bouncycastle.version}.jar" dest="${jsourcemap-build.dir}/build-deps/bcprov-jdk15on-${bouncycastle.version}.jar" usetimestamp="true" />
+        <get src="http://repo1.maven.org/maven2/org/bouncycastle/bcpg-jdk15on/${bouncycastle.version}/bcpg-jdk15on-${bouncycastle.version}.jar" dest="${jsourcemap-build.dir}/build-deps/bcpg-jdk15on-${bouncycastle.version}.jar" usetimestamp="true" />
+        <get src="http://people.apache.org/repo/m2-snapshot-repository/org/apache/commons/commons-openpgp/1.0-SNAPSHOT/commons-openpgp-${commons-openpgp.version}.jar" dest="${jsourcemap-build.dir}/build-deps/commons-openpgp-${commons-openpgp.version}.jar" usetimestamp="true" />
+    </target>
+
+    <target name="init:ivy" depends="-download-build-deps" unless="ivy.initiated">
+        <!-- load Ivy tasks-->
+        <taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant">
+            <classpath>
+                <pathelement location="${jsourcemap-build.dir}/build-deps/ivy-${ivy.version}.jar" />
+                <pathelement location="${jsourcemap-build.dir}/build-deps/bcprov-jdk15on-${bouncycastle.version}.jar" />
+                <pathelement location="${jsourcemap-build.dir}/build-deps/bcpg-jdk15on-${bouncycastle.version}.jar" />
+                <pathelement location="${jsourcemap-build.dir}/build-deps/commons-openpgp-${commons-openpgp.version}.jar" />
+            </classpath>
+        </taskdef>
+        <property name="ivy.initiated" value="true" />
+    </target>
+
+    <target name="ivy:configure" depends="init:ivy" unless="ivy.configured">
+        <ivy:configure file="${jsourcemap-build.dir}/ivysettings.xml">
+            <workspaceResolver name="jsourcemap-projects">
+                <fileset dir="${jsourcemap-root.dir}" includes="*/ivy.xml" />
+                <artifact type="dir" ext="" path="target/classes" />
+            </workspaceResolver>
+        </ivy:configure>
+        <property name="ivy.configured" value="true" />
+    </target>
+
+    <target name="init:ant-tasks" depends="ivy:configure,-download-build-deps" unless="ant-tasks.initiated">
+        <!-- load ant-contrib -->
+        <ivy:resolve keep="true" resolveId="antcontrib.resolve" log="download-only">
+            <dependency org="ant-contrib" name="ant-contrib" rev="1.0b3" transitive="false" />
+        </ivy:resolve>
+        <ivy:cachepath resolveId="antcontrib.resolve" pathid="antcontrib.classpath" type="jar,bundle" />
+        <taskdef resource="net/sf/antcontrib/antlib.xml" uri="antlib:net.sf.antcontrib" classpathref="antcontrib.classpath" />
+
+    	<taskdef uri="antlib:andariel" resource="net/uworks/andariel/andariel.properties" classpath="${jsourcemap-build.dir}/build-deps/andariel-1.2.3/andariel-1.2.3.jar" />
+
+        <property name="ant-tasks.initiated" value="true" />
+    </target>
+
+    <target name="init:props">
+        <property name="jsourcemap.version" value="${jsourcemap.version.base}-SNAPSHOT" />
+        <property name="publish.resolver" value="ossrh-snapshots" />
+    </target>
+
+    <target name="init:props-release">
+        <property name="jsourcemap.version" value="${jsourcemap.version.base}" />
+        <property name="publish.resolver" value="ossrh-staging" />
+    </target>
+
+    <target name="init" depends="init:props,init:ant-tasks" />
+
+    <target name="-check-publish-properties">
+        <condition property="publish-properties.initiated" value="true">
+            <and>
+                <isset property="ossrh.passwd" />
+                <isset property="pgp.password" />
+            </and>
+        </condition>
+    </target>
+
+    <target name="init:publish-properties" depends="-check-publish-properties" unless="publish-properties.initiated">
+        <input addproperty="ossrh.passwd" message="OSSRH password:">
+            <handler classname="org.apache.tools.ant.input.SecureInputHandler" />
+        </input>
+        <input addproperty="pgp.password" message="PGP password:">
+            <handler classname="org.apache.tools.ant.input.SecureInputHandler" />
+        </input>
+    </target>
+
+    <macrodef name="git">
+        <attribute name="command" />
+        <sequential>
+            <echo message="git @{command}" />
+            <exec executable="git" failonerror="true">
+                <arg line="@{command}" />
+            </exec>
+        </sequential>
+    </macrodef>
+
+</project>

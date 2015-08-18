@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright 2015 JSourceMap contributors
+    
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+    
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<project name="jsourcemap"
+    xmlns:ivy="antlib:org.apache.ivy.ant"
+    xmlns:ac="antlib:net.sf.antcontrib"
+    xmlns:openpgp="antlib:org.apache.commons.openpgp.ant">
+
+    <dirname property="jsourcemap-build.dir" file="${ant.file.jsourcemap}" />
+    <property name="jsourcemap-root.dir" location="${jsourcemap-build.dir}/.." />
+
+    <import file="${jsourcemap-build.dir}/common-build.xml" />
+
+    <target name="-build-list" depends="init,ivy:configure">
+        <ivy:buildlist reference="build-list" ivyfilepath="ivy.xml">
+            <fileset dir="${jsourcemap-root.dir}" includes="jsourcemap*/build.xml" />
+        </ivy:buildlist>
+    </target>
+
+    <macrodef name="buildall">
+        <attribute name="target" />
+        <element name="subant-elements" implicit="yes" optional="true" />
+        <sequential>
+            <subant target="@{target}" buildpathref="build-list" inheritAll="false">
+                <property name="jsourcemap.version" value="${jsourcemap.version}" />
+                <property name="publish.resolver" value="${publish.resolver}" />
+                <property name="build-deps.downloaded" value="${build-deps.downloaded}" />
+                <property name="ivy.initiated" value="${ivy.initiated}" />
+                <subant-elements />
+            </subant>
+        </sequential>
+    </macrodef>
+
+    <target name="clean" depends="-build-list" description="Clean build artifacts">
+        <buildall target="clean" />
+    </target>
+
+    <target name="build" depends="-build-list" description="Build the main artifacts" >
+        <buildall target="build" />
+    </target>
+
+    <target name="dist" depends="-build-list" description="Build all artifacts">
+        <buildall target="dist" />
+    </target>
+
+    <target name="update-deps" depends="-build-list" description="Update dependencies (to be called on ivy.xml change)">
+        <buildall target="update-deps" />
+    </target>
+
+    <target name="update-deps-and-build" depends="-build-list">
+        <buildall target="update-deps-and-build" />
+    </target>
+
+    <target name="ci-build" depends="-build-list">
+        <buildall target="ci-build" />
+    </target>
+
+    <target name="-compute-next-version" depends="init,init:ant-tasks">
+        <ac:propertyregex property="jsourcemap.version.major" input="${jsourcemap.version}" regexp="([0-9]*).*" select="\1" />
+        <ac:propertyregex property="jsourcemap.version.minor" input="${jsourcemap.version}" regexp="[0-9]*\.([0-9]*).*" select="\1" />
+        <ac:propertyregex property="jsourcemap.version.patch" input="${jsourcemap.version}" regexp="[0-9]*\.[0-9]*\.([0-9]*).*" select="\1" />
+        <ac:math result="jsourcemap.version.patch.next" operand1="${jsourcemap.version.patch}" operation="+" operand2="1" datatype="int" />
+        <property name="jsourcemap.version.next" value="${jsourcemap.version.major}.${jsourcemap.version.minor}.${jsourcemap.version.patch.next}" />
+    </target>
+
+    <target name="-ask-version" depends="-compute-next-version" unless="newversion">
+        <input addproperty="newversion" message="New version: " defaultvalue="${jsourcemap.version.next}" />
+    </target>
+
+    <target name="set-version" depends="init:ant-tasks,-ask-version" description="Set the new version of jsourcemap">
+        <!-- compute the next major version -->
+        <ac:propertyregex property="newversion.major" input="${newversion}" regexp="([0-9]*).*" select="\1" />
+        <ac:propertyregex property="newversion.minor" input="${newversion}" regexp="[0-9]*\.([0-9]*).*" select="\1" />
+        <ac:propertyregex property="newversion.patch" input="${newversion}" regexp="[0-9]*\.[0-9]*\.([0-9]*).*" select="\1" />
+        <ac:math result="newversion.patch.next" operand1="${newversion.patch}" operation="+" operand2="1" datatype="int" />
+        <property name="newversion.next" value="${newversion.major}.${newversion.minor}.${newversion.patch.next}" />
+        <loadresource property="build.properties.content.new">
+            <file file="${jsourcemap-build.dir}/build.properties" />
+            <filterchain>
+                <tokenfilter>
+                    <replaceregex pattern="^jsourcemap\.version\.base=.*$" replace="jsourcemap.version.base=${newversion}" flags="gi" />
+                </tokenfilter>
+            </filterchain>
+        </loadresource>
+        <echo message="${build.properties.content.new}" file="${jsourcemap-build.dir}/build.properties" />
+        <ac:for param="ivyfile">
+            <fileset dir="${basedir}" includes="*/ivy.xml" />
+            <fileset dir="${basedir}" includes="*/ivy-fixed.xml" />
+            <sequential>
+                <loadresource property="@{ivyfile}.content.new">
+                    <file file="@{ivyfile}" />
+                    <filterchain>
+                        <tokenfilter>
+                            <filetokenizer />
+                            <replaceregex pattern="(&lt;info\s+organisation\s*=\s*&quot;org.hibnet&quot;\s+module\s*=\s*&quot;jsourcemap-[^&quot;]*&quot;\s+revision\s*=\s*&quot;)[^&quot;]*(&quot;)"
+                                replace="\1${newversion}\2" flags="gi" />
+                            <replaceregex pattern="(&lt;dependency\s+org\s*=\s*&quot;org.hibnet&quot;\s+name\s*=\s*&quot;jsourcemap-[^&quot;]*&quot;\s+rev\s*=\s*&quot;)[^&quot;]*(&quot;)"
+                                replace="\1[${newversion},${newversion.next})\2" flags="gi" />
+                        </tokenfilter>
+                    </filterchain>
+                </loadresource>
+                <echo message="${@{ivyfile}.content.new}" file="@{ivyfile}" />
+            </sequential>
+        </ac:for>        
+    </target>
+
+    <target name="-set-next-version" depends="-compute-next-version">
+        <property name="newversion" value="${jsourcemap.version.next}" />
+    </target>
+
+    <target name="bump-version" depends="-set-next-version,set-version">
+        <!-- commit -->
+        <git command="commit -a -m 'v++'" />
+    </target>
+
+    <target name="-publish-all" depends="init:publish-properties,-build-list">
+        <buildall target="publish">
+            <property name="ossrh.passwd" value="${ossrh.passwd}" />
+            <property name="pgp.password" value="${pgp.password}" />
+        </buildall>
+    </target>
+
+    <target name="publish-snapshot" depends="-publish-all" description="Publish the snapshots artifacts">
+    </target>
+
+    <target name="-pre-release" depends="init:props-release">
+        <!-- tag first, so this will ensure that the version is unique -->
+        <git command="tag ${jsourcemap.version}" />
+    </target>
+
+    <target name="release" depends="-pre-release,-publish-all,bump-version" description="Release the entire project">
+    </target>
+
+</project>

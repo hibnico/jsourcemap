@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ivy-module version="2.0">
+	<info organisation="org.hibnet"
+		module="jsourcemap"
+		revision="0.0.1"
+		status="integration"
+		publication="20150818134714"
+	>
+		<description>
+		JSourceMap is a library to parse and produce SourceMaps
+		</description>
+	</info>
+	<configurations>
+		<conf name="default" visibility="public"/>
+	</configurations>
+	<publications>
+		<artifact name="jsourcemap" type="jar" ext="jar" conf="default"/>
+	</publications>
+</ivy-module>
