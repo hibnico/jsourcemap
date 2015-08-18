@@ -2,7 +2,6 @@ package org.hibnet.jsourcemap;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -124,12 +123,12 @@ public class BasicSourceMapConsumer extends SourceMapConsumer {
         // strikes again! See github issue #191.
 
         List<Mapping> generatedMappings = new ArrayList<>(aSourceMap._mappings.toArray());
-        List<Mapping> destGeneratedMappings = smc.__generatedMappings = new ArrayList<>();
-        List<Mapping> destOriginalMappings = smc.__originalMappings = new ArrayList<>();
+        List<ConsumerMapping> destGeneratedMappings = smc.__generatedMappings = new ArrayList<>();
+        List<ConsumerMapping> destOriginalMappings = smc.__originalMappings = new ArrayList<>();
 
         for (int i = 0, length = generatedMappings.size(); i < length; i++) {
             Mapping srcMapping = generatedMappings.get(i);
-            Mapping destMapping = new Mapping();
+            ConsumerMapping destMapping = new ConsumerMapping();
             destMapping.generatedLine = srcMapping.generatedLine;
             destMapping.generatedColumn = srcMapping.generatedColumn;
 
@@ -147,13 +146,8 @@ public class BasicSourceMapConsumer extends SourceMapConsumer {
             destGeneratedMappings.add(destMapping);
         }
 
-        Collections.sort(smc.__originalMappings, new Comparator<Mapping>() {
-            @Override
-            public int compare(Mapping o1, Mapping o2) {
-                return Util.compareByOriginalPositions(o1, o2, null);
-            }
-        });
-
+        Collections.sort(smc.__originalMappings,
+                (ConsumerMapping o1, ConsumerMapping o2) -> Util.compareByOriginalPositions(o1, o2, null));
         return smc;
     }
 
@@ -184,9 +178,9 @@ public class BasicSourceMapConsumer extends SourceMapConsumer {
         int index = 0;
         Map<String, List<Integer>> cachedSegments = new HashMap<>();
         Base64VLQResult temp;
-        List<Mapping> originalMappings = new ArrayList<>();
-        List<Mapping> generatedMappings = new ArrayList<>();
-        Mapping mapping;
+        List<ConsumerMapping> originalMappings = new ArrayList<>();
+        List<ConsumerMapping> generatedMappings = new ArrayList<>();
+        ConsumerMapping mapping;
         String str;
         List<Integer> segment;
         int end;
@@ -200,7 +194,7 @@ public class BasicSourceMapConsumer extends SourceMapConsumer {
             } else if (aStr.charAt(index) == ',') {
                 index++;
             } else {
-                mapping = new Mapping();
+                mapping = new ConsumerMapping();
                 mapping.generatedLine = generatedLine;
 
                 // Because each offset is encoded relative to the previous one,
@@ -221,7 +215,7 @@ public class BasicSourceMapConsumer extends SourceMapConsumer {
                 } else {
                     segment = new ArrayList<>();
                     while (index < end) {
-                        Base64VLQResult tmp = Base64VLQ.decode(aStr, index, temp);
+                        temp = Base64VLQ.decode(aStr, index);
                         value = temp.value;
                         index = temp.rest;
                         segment.add(value);
@@ -271,42 +265,13 @@ public class BasicSourceMapConsumer extends SourceMapConsumer {
             }
         }
 
-        Collections.sort(generatedMappings, new Comparator<Mapping>() {
-            @Override
-            public int compare(Mapping o1, Mapping o2) {
-                return Util.compareByGeneratedPositionsDeflated(o1, o2, null);
-            }
-        });
+        Collections.sort(generatedMappings,
+                (ConsumerMapping o1, ConsumerMapping o2) -> Util.compareByGeneratedPositionsDeflated(o1, o2, null));
         this.__generatedMappings = generatedMappings;
 
-        Collections.sort(originalMappings, new Comparator<Mapping>() {
-            @Override
-            public int compare(Mapping o1, Mapping o2) {
-                return Util.compareByOriginalPositions(o1, o2, null);
-            }
-        });
+        Collections.sort(originalMappings,
+                (ConsumerMapping o1, ConsumerMapping o2) -> Util.compareByOriginalPositions(o1, o2, null));
         this.__originalMappings = originalMappings;
-    }
-
-    /**
-     * Find the mapping that best matches the hypothetical "needle" mapping that we are searching for in the given
-     * "haystack" of mappings.
-     */
-    private int findMapping(Needle aNeedle, List aMappings, Object aLineName, Object aColumnName,
-            Comparator aComparator, BinarySearch.Bias aBias) {
-        // To return the position we are searching for, we must first find the
-        // mapping for the given position and then return the opposite position it
-        // points to. Because the mappings are sorted, we can use binary search to
-        // find the best mapping.
-
-        if (aNeedle[aLineName] <= 0) {
-            throw new TypeError("Line must be greater than or equal to 1, got " + aNeedle[aLineName]);
-        }
-        if (aNeedle[aColumnName] < 0) {
-            throw new TypeError("Column must be greater than or equal to 0, got " + aNeedle[aColumnName]);
-        }
-
-        return BinarySearch.search(aNeedle, aMappings, aComparator, aBias);
     }
 
     /**
@@ -314,14 +279,14 @@ public class BasicSourceMapConsumer extends SourceMapConsumer {
      */
     private void computeColumnSpans() {
         for (int index = 0; index < _generatedMappings().size(); ++index) {
-            Mapping mapping = _generatedMappings().get(index);
+            ConsumerMapping mapping = _generatedMappings().get(index);
 
             // Mappings do not contain a field for the last generated columnt. We
             // can come up with an optimistic estimate, however, by assuming that
             // mappings are contiguous (i.e. given two consecutive mappings, the
             // first mapping ends where the second one starts).
             if (index + 1 < _generatedMappings().size()) {
-                Mapping nextMapping = _generatedMappings().get(index + 1);
+                ConsumerMapping nextMapping = _generatedMappings().get(index + 1);
 
                 if (mapping.generatedLine == nextMapping.generatedLine) {
                     mapping.lastGeneratedColumn = nextMapping.generatedColumn - 1;
@@ -354,31 +319,33 @@ public class BasicSourceMapConsumer extends SourceMapConsumer {
      */
     @Override
     OriginalMapping originalPositionFor(int line, int column, Bias bias) {
-        Needle needle = new Needle(line, column);
+        ConsumerMapping needle = new ConsumerMapping(line, column);
         if (bias == null) {
             bias = Bias.GREATEST_LOWER_BOUND;
         }
         int index = this._findMapping(needle, this._generatedMappings(), "generatedLine", "generatedColumn",
-                Util.compareByGeneratedPositionsDeflated, bias);
+                (mapping1, mapping2) -> Util.compareByGeneratedPositionsDeflated(mapping1, mapping2, true), bias);
 
         if (index >= 0) {
-            Mapping mapping = this._generatedMappings().get(index);
+            ConsumerMapping mapping = this._generatedMappings().get(index);
 
             if (mapping.generatedLine == needle.generatedLine)
 
             {
-                String source = mapping.source;
+                Integer source = mapping.source;
+                String source_ = null;
                 if (source != null) {
-                    source = this._sources.at(source);
+                    source_ = this._sources.at(source);
                     if (this.sourceRoot != null) {
-                        source = Util.join(this.sourceRoot, source);
+                        source_ = Util.join(this.sourceRoot, source_);
                     }
                 }
-                String name = mapping.name;
+                Integer name = mapping.name;
+                String name_ = null;
                 if (name != null) {
-                    name = this._names.at(name);
+                    name_ = this._names.at(name);
                 }
-                return new OriginalMapping(mapping.originalLine, mapping.originalColumn, source, name);
+                return new OriginalMapping(mapping.originalLine, mapping.originalColumn, source_, name_);
             }
 
         }
@@ -467,17 +434,17 @@ public class BasicSourceMapConsumer extends SourceMapConsumer {
         }
         int source_ = this._sources.indexOf(source);
 
-        Needle needle = new Needle(source_, line, column);
+        ConsumerMapping needle = new ConsumerMapping(line, column, null, null, source_, null);
 
         if (bias == null) {
             bias = Bias.GREATEST_LOWER_BOUND;
         }
 
-        int index = findMapping(needle, this._originalMappings(), "originalLine", "originalColumn",
-                Util::compareByOriginalPositions, bias);
+        int index = _findMapping(needle, this._originalMappings(), "originalLine", "originalColumn",
+                (mapping1, mapping2) -> Util.compareByOriginalPositions(mapping1, mapping2, true), bias);
 
         if (index >= 0) {
-            Mapping mapping = this._originalMappings().get(index);
+            ConsumerMapping mapping = this._originalMappings().get(index);
 
             if (mapping.source == needle.source) {
                 return new Position(mapping.generatedLine != null ? mapping.generatedLine : null,

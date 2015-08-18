@@ -74,7 +74,7 @@ public class Base64VLQ {
      * 
      * @return
      */
-    public static Base64VLQResult decode(String aStr, int aIndex, Object aOutParam) {
+    public static Base64VLQResult decode(String aStr, int aIndex) {
         int strLen = aStr.length();
         int result = 0;
         int shift = 0;

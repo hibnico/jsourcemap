@@ -72,18 +72,18 @@ public abstract class SourceMapConsumer {
     //
     // `_originalMappings` is ordered by the original positions.
 
-    List<Mapping> __generatedMappings = null;
+    List<ConsumerMapping> __generatedMappings = null;
 
-    List<Mapping> _generatedMappings() {
+    List<ConsumerMapping> _generatedMappings() {
         if (this.__generatedMappings == null) {
             this._parseMappings(this._mappings, this.sourceRoot);
         }
         return this.__generatedMappings;
     }
 
-    List<Mapping> __originalMappings = null;
+    List<ConsumerMapping> __originalMappings = null;
 
-    List<Mapping> _originalMappings() {
+    List<ConsumerMapping> _originalMappings() {
         if (this.__originalMappings == null) {
             this._parseMappings(this._mappings, this.sourceRoot);
         }
@@ -129,7 +129,7 @@ public abstract class SourceMapConsumer {
             aOrder = Order.generated;
         }
 
-        List<Mapping> mappings;
+        List<ConsumerMapping> mappings;
         switch (aOrder) {
         case generated:
             mappings = _generatedMappings();
@@ -148,7 +148,7 @@ public abstract class SourceMapConsumer {
                 source = Util.join(sourceRoot, source);
             }
             return new Mapping(mapping.generatedLine, mapping.generatedColumn, mapping.originalLine,
-                    mapping.originalColumn, source, mapping.name == null ? null : this._names.get(mapping.name));
+                    mapping.originalColumn, source, mapping.name == null ? null : this._names.at(mapping.name));
         });
     }
 
@@ -167,7 +167,7 @@ public abstract class SourceMapConsumer {
             this.lastColumn = lastColumn;
         }
 
-        public Position(Mapping mapping) {
+        public Position(ConsumerMapping mapping) {
             if (mapping.generatedLine != null) {
                 line = mapping.generatedLine;
                 column = mapping.generatedColumn;
@@ -199,7 +199,7 @@ public abstract class SourceMapConsumer {
         // returns the index of the closest mapping less than the needle. By
         // setting needle.originalColumn to 0, we thus find the last mapping for
         // the given line, provided such a mapping exists.
-        Needle needle = new Needle(0, line, column == null ? 0 : column);
+        ConsumerMapping needle = new ConsumerMapping(line, column == null ? 0 : column);
 
         if (this.sourceRoot != null) {
             source = Util.relative(this.sourceRoot, source);
@@ -212,9 +212,10 @@ public abstract class SourceMapConsumer {
         List<Position> mappings = new ArrayList<>();
 
         int index = _findMapping(needle, this._originalMappings(), "originalLine", "originalColumn",
-                Util::compareByOriginalPositions, BinarySearch.Bias.LEAST_UPPER_BOUND);
+                (mapping1, mapping2) -> Util.compareByOriginalPositions(mapping1, mapping2, true),
+                BinarySearch.Bias.LEAST_UPPER_BOUND);
         if (index >= 0) {
-            Mapping mapping = this._originalMappings().get(index);
+            ConsumerMapping mapping = this._originalMappings().get(index);
 
             if (column == null) {
                 int originalLine = mapping.originalLine;
@@ -243,4 +244,26 @@ public abstract class SourceMapConsumer {
 
         return mappings;
     }
+
+    /**
+     * Find the mapping that best matches the hypothetical "needle" mapping that we are searching for in the given
+     * "haystack" of mappings.
+     */
+    <T> int _findMapping(T aNeedle, List<T> aMappings, Object aLineName, Object aColumnName,
+            BinarySearch.Comparator<T> aComparator, BinarySearch.Bias aBias) {
+        // To return the position we are searching for, we must first find the
+        // mapping for the given position and then return the opposite position it
+        // points to. Because the mappings are sorted, we can use binary search to
+        // find the best mapping.
+
+        // if (aNeedle[aLineName] <= 0) {
+        // throw new TypeError("Line must be greater than or equal to 1, got " + aNeedle[aLineName]);
+        // }
+        // if (aNeedle[aColumnName] < 0) {
+        // throw new TypeError("Column must be greater than or equal to 0, got " + aNeedle[aColumnName]);
+        // }
+
+        return BinarySearch.search(aNeedle, aMappings, aComparator, aBias);
+    }
+
 }

@@ -1,6 +1,5 @@
 package org.hibnet.jsourcemap;
 
-import java.util.Comparator;
 import java.util.List;
 
 public class BinarySearch {
@@ -9,7 +8,13 @@ public class BinarySearch {
         GREATEST_LOWER_BOUND, LEAST_UPPER_BOUND
     }
 
-    private static int recursiveSearch(int aLow, int aHigh, Needle aNeedle, List aHaystack, Comparator aCompare,
+    static interface Comparator<T> {
+
+        public int compare(T needle, T element);
+
+    }
+
+    private static <T> int recursiveSearch(int aLow, int aHigh, T aNeedle, List<T> aHaystack, Comparator<T> aCompare,
             Bias aBias) {
         // This function terminates when one of the following is true:
         //
@@ -21,7 +26,7 @@ public class BinarySearch {
         // 3. We did not find the exact element, and there is no next-closest
         // element than the one we are searching for, so we return -1.
         int mid = (int) (Math.floor((aHigh - aLow) / 2) + aLow);
-        int cmp = aCompare.compare(aNeedle, aHaystack.get(mid), true);
+        int cmp = aCompare.compare(aNeedle, aHaystack.get(mid));
         if (cmp == 0) {
             // Found the element we are looking for.
             return mid;
@@ -55,7 +60,7 @@ public class BinarySearch {
         }
     }
 
-    public static int search(Needle aNeedle, List aHaystack, Comparator aCompare, Bias aBias) {
+    public static <T> int search(T aNeedle, List<T> aHaystack, Comparator<T> aCompare, Bias aBias) {
         if (aHaystack.size() == 0) {
             return -1;
         }
@@ -73,7 +78,7 @@ public class BinarySearch {
         // the one we are searching for. However, there may be more than one such
         // element. Make sure we always return the smallest of these.
         while (index - 1 >= 0) {
-            if (aCompare.compare(aHaystack.get(index), aHaystack.get(index - 1), true) != 0) {
+            if (aCompare.compare(aHaystack.get(index), aHaystack.get(index - 1)) != 0) {
                 break;
             }
             --index;

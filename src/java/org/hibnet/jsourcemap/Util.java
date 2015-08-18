@@ -188,8 +188,9 @@ public class Util {
         return aStr.substring(1);
     }
 
-    static int compareByOriginalPositions(Mapping mappingA, Mapping mappingB, Boolean onlyCompareOriginal) {
-        int cmp = mappingA.source.compareTo(mappingB.source);
+    static int compareByOriginalPositions(ConsumerMapping mappingA, ConsumerMapping mappingB,
+            Boolean onlyCompareOriginal) {
+        int cmp = mappingA.source - mappingB.source;
         if (cmp != 0) {
             return cmp;
         }
@@ -214,10 +215,11 @@ public class Util {
             return cmp;
         }
 
-        return mappingA.name.compareTo(mappingB.name);
+        return mappingA.name - mappingB.name;
     }
 
-    static int compareByGeneratedPositionsDeflated(Mapping mappingA, Mapping mappingB, Boolean onlyCompareGenerated) {
+    static int compareByGeneratedPositionsDeflated(ConsumerMapping mappingA, ConsumerMapping mappingB,
+            Boolean onlyCompareGenerated) {
         int cmp = mappingA.generatedLine - mappingB.generatedLine;
         if (cmp != 0) {
             return cmp;
@@ -228,7 +230,7 @@ public class Util {
             return cmp;
         }
 
-        cmp = mappingA.source.compareTo(mappingB.source);
+        cmp = mappingA.source - mappingB.source;
         if (cmp != 0) {
             return cmp;
         }
@@ -243,7 +245,7 @@ public class Util {
             return cmp;
         }
 
-        return mappingA.name.compareTo(mappingB.name);
+        return mappingA.name - mappingB.name;
     }
 
     static final int compareByGeneratedPositionsInflated(Mapping mappingA, Mapping mappingB) {

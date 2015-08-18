@@ -2,7 +2,6 @@ package org.hibnet.jsourcemap;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -74,12 +73,7 @@ public class MappingList {
      */
     List<Mapping> toArray() {
         if (!this._sorted) {
-            Collections.sort(this._array, new Comparator<Mapping>() {
-                @Override
-                public int compare(Mapping o1, Mapping o2) {
-                    return Util.compareByGeneratedPositionsInflated(o1, o2);
-                }
-            });
+            Collections.sort(this._array, Util::compareByGeneratedPositionsInflated);
             this._sorted = true;
         }
         return this._array;
