@@ -304,6 +304,7 @@ public class Util {
             if (!first) {
                 buffer.append(join);
             }
+            first = false;
             buffer.append(item);
         }
         return buffer.toString();

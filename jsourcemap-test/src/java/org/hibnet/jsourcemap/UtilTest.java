@@ -15,7 +15,8 @@
  */
 package org.hibnet.jsourcemap;
 
-import static org.junit.Assert.assertEquals;
+import static org.hibnet.jsourcemap.TestUtil.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
@@ -40,14 +41,14 @@ public class UtilTest {
         assertUrl("//www.example.com");
         assertUrl("file:///www.example.com");
 
-        assertEquals(Util.urlParse(""), null);
-        assertEquals(Util.urlParse("."), null);
-        assertEquals(Util.urlParse(".."), null);
-        assertEquals(Util.urlParse("a"), null);
-        assertEquals(Util.urlParse("a/b"), null);
-        assertEquals(Util.urlParse("a//b"), null);
-        assertEquals(Util.urlParse("/a"), null);
-        assertEquals(Util.urlParse("data:foo,bar"), null);
+        assertNull(Util.urlParse(""));
+        assertNull(Util.urlParse("."));
+        assertNull(Util.urlParse(".."));
+        assertNull(Util.urlParse("a"));
+        assertNull(Util.urlParse("a/b"));
+        assertNull(Util.urlParse("a//b"));
+        assertNull(Util.urlParse("/a"));
+        assertNull(Util.urlParse("data:foo,bar"));
     };
 
     @Test

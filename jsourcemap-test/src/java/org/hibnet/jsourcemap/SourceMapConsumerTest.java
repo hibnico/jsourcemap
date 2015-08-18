@@ -15,7 +15,7 @@
  */
 package org.hibnet.jsourcemap;
 
-import static org.junit.Assert.assertEquals;
+import static org.hibnet.jsourcemap.TestUtil.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -663,8 +663,8 @@ public class SourceMapConsumerTest {
         SourceMapConsumer map2 = SourceMapConsumer.create(map.toString());
 
         List<String> sources = map2.sources();
-        assertEquals("Should only be one source.", sources.size(), 1);
-        assertEquals("Should not be joined with the sourceRoot.", sources.get(0), "http://cdn.example.com/original.js");
+        assertEquals(sources.size(), 1, "Should only be one source.");
+        assertEquals(sources.get(0), "http://cdn.example.com/original.js", "Should not be joined with the sourceRoot.");
     }
 
     @Test
@@ -674,8 +674,8 @@ public class SourceMapConsumerTest {
         SourceMapConsumer map2 = SourceMapConsumer.create(map.toString());
 
         List<String> sources = map2.sources();
-        assertEquals("Should only be one source.", sources.size(), 1);
-        assertEquals("Source should be relative the host of the source root.", sources.get(0), "http://example.com/original.js");
+        assertEquals(sources.size(), 1, "Should only be one source.");
+        assertEquals(sources.get(0), "http://example.com/original.js", "Source should be relative the host of the source root.");
     }
 
     @Test

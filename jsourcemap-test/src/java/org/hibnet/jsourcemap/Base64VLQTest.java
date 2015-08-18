@@ -15,7 +15,7 @@
  */
 package org.hibnet.jsourcemap;
 
-import static org.junit.Assert.assertEquals;
+import static org.hibnet.jsourcemap.TestUtil.assertEquals;
 
 import org.hibnet.jsourcemap.Base64VLQ.Base64VLQResult;
 import org.junit.Test;

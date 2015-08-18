@@ -15,7 +15,7 @@
  */
 package org.hibnet.jsourcemap;
 
-import static org.junit.Assert.assertEquals;
+import static org.hibnet.jsourcemap.TestUtil.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
@@ -419,7 +419,7 @@ public class SourceMapGeneratorTest {
 
         long n = consumer.eachMapping().count();
 
-        assertEquals("Should not de-duplicate mappings that have the same " + "generated positions, but different original positions.", n, 2);
+        assertEquals(n, 2, "Should not de-duplicate mappings that have the same generated positions, but different original positions.");
     }
 
 }

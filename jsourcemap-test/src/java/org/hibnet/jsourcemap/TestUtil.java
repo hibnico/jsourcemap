@@ -15,13 +15,13 @@
  */
 package org.hibnet.jsourcemap;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
 import org.hibnet.jsourcemap.SourceMapConsumer.Position;
+
+import junit.framework.Assert;
 
 public class TestUtil {
 
@@ -176,11 +176,11 @@ public class TestUtil {
             String name, BinarySearch.Bias bias, SourceMapConsumer map, Boolean dontTestGenerated, Boolean dontTestOriginal) {
         if (dontTestOriginal == null || !dontTestOriginal) {
             OriginalMapping origMapping = map.originalPositionFor(generatedLine, generatedColumn, bias);
-            assertEquals("Incorrect name, expected " + name + ", got " + origMapping.name, origMapping.name, name);
-            assertEquals("Incorrect line, expected " + originalLine + ", got " + origMapping.line, origMapping.line, originalLine);
-            assertEquals("Incorrect column, expected " + originalColumn + ", got " + origMapping.column, origMapping.column, originalColumn);
+            assertEquals(origMapping.name, name, "Incorrect name, expected " + name + ", got " + origMapping.name);
+            assertEquals(origMapping.line, originalLine, "Incorrect line, expected " + originalLine + ", got " + origMapping.line);
+            assertEquals(origMapping.column, originalColumn, "Incorrect column, expected " + originalColumn + ", got " + origMapping.column);
 
-            Object expectedSource;
+            String expectedSource;
 
             if (originalSource != null && map.sourceRoot != null && originalSource.indexOf(map.sourceRoot) == 0) {
                 expectedSource = originalSource;
@@ -190,40 +190,63 @@ public class TestUtil {
                 expectedSource = null;
             }
 
-            assertEquals("Incorrect source, expected " + expectedSource + ", got " + origMapping.source, origMapping.source, expectedSource);
+            assertEquals(origMapping.source, expectedSource, "Incorrect source, expected " + expectedSource + ", got " + origMapping.source);
         }
 
         if (dontTestGenerated == null || !dontTestGenerated) {
             Position genMapping = map.generatedPositionFor(originalSource, originalLine, originalColumn, bias);
-            assertEquals("Incorrect line, expected " + generatedLine + ", got " + genMapping.line, genMapping.line, generatedLine);
-            assertEquals("Incorrect column, expected " + generatedColumn + ", got " + genMapping.column, genMapping.column, generatedColumn);
+            assertEquals(genMapping.line, generatedLine, "Incorrect line, expected " + generatedLine + ", got " + genMapping.line);
+            assertEquals(genMapping.column, generatedColumn, "Incorrect column, expected " + generatedColumn + ", got " + genMapping.column);
         }
     }
 
     static void assertEqualMaps(SourceMap actualMap, SourceMap expectedMap) {
-        assertEquals("version mismatch", actualMap.version, expectedMap.version);
-        assertEquals("file mismatch", actualMap.file, expectedMap.file);
-        assertEquals("names length mismatch: " + Util.join(actualMap.names, ", ") + " != " + Util.join(expectedMap.names, ", "),
-                actualMap.names.size(), expectedMap.names.size());
+        assertEquals(actualMap.version, expectedMap.version, "version mismatch");
+        assertEquals(actualMap.file, expectedMap.file, "file mismatch");
+        assertEquals(actualMap.names.size(), expectedMap.names.size(),
+                "names length mismatch: " + Util.join(actualMap.names, ", ") + " != " + Util.join(expectedMap.names, ", "));
         for (int i = 0; i < actualMap.names.size(); i++) {
-            assertEquals("names[" + i + "] mismatch: " + Util.join(actualMap.names, ", ") + " != " + Util.join(expectedMap.names, ", "),
-                    actualMap.names.get(i), expectedMap.names.get(i));
+            assertEquals(actualMap.names.get(i), expectedMap.names.get(i),
+                    "names[" + i + "] mismatch: " + Util.join(actualMap.names, ", ") + " != " + Util.join(expectedMap.names, ", "));
         }
-        assertEquals("sources length mismatch: " + Util.join(actualMap.sources, ", ") + " != " + Util.join(expectedMap.sources, ", "),
-                actualMap.sources.size(), expectedMap.sources.size());
+        assertEquals(actualMap.sources.size(), expectedMap.sources.size(),
+                "sources length mismatch: " + Util.join(actualMap.sources, ", ") + " != " + Util.join(expectedMap.sources, ", "));
         for (int i = 0; i < actualMap.sources.size(); i++) {
-            assertEquals("sources[" + i + "] length mismatch: " + Util.join(actualMap.sources, ", ") + " != " + Util.join(expectedMap.sources, ", "),
-                    actualMap.sources.get(i), expectedMap.sources.get(i));
+            assertEquals(actualMap.sources.get(i), expectedMap.sources.get(i),
+                    "sources[" + i + "] length mismatch: " + Util.join(actualMap.sources, ", ") + " != " + Util.join(expectedMap.sources, ", "));
         }
         assertEquals(actualMap.sourceRoot, expectedMap.sourceRoot, "sourceRoot mismatch: " + actualMap.sourceRoot + " != " + expectedMap.sourceRoot);
         assertEquals(actualMap.mappings, expectedMap.mappings,
                 "mappings mismatch:\nActual:   " + actualMap.mappings + "\nExpected: " + expectedMap.mappings);
         if (actualMap.sourcesContent != null) {
-            assertEquals("sourcesContent length mismatch", actualMap.sourcesContent.size(), expectedMap.sourcesContent.size());
+            assertEquals(actualMap.sourcesContent.size(), expectedMap.sourcesContent.size(), "sourcesContent length mismatch");
             for (int i = 0; i < actualMap.sourcesContent.size(); i++) {
                 assertEquals(actualMap.sourcesContent.get(i), expectedMap.sourcesContent.get(i), "sourcesContent[" + i + "] mismatch");
             }
         }
     }
 
+    static void assertEquals(String actual, String expected, String message) {
+        Assert.assertEquals(message, expected, actual);
+    }
+
+    static void assertEquals(String actual, String expected) {
+        Assert.assertEquals(expected, actual);
+    }
+
+    static void assertEquals(int actual, int expected) {
+        Assert.assertEquals(expected, actual);
+    }
+
+    static void assertEquals(int actual, int expected, String message) {
+        Assert.assertEquals(expected, actual);
+    }
+
+    static void assertEquals(long actual, long expected) {
+        Assert.assertEquals(expected, actual);
+    }
+
+    static void assertEquals(long actual, long expected, String message) {
+        Assert.assertEquals(expected, actual);
+    }
 }
