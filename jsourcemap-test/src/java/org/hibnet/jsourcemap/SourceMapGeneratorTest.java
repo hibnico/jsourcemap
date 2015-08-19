@@ -47,7 +47,8 @@ public class SourceMapGeneratorTest {
         map.addMapping(new GeneratorMapping(new GeneratorPosition(1, 9), new GeneratorPosition(1, 11), "one.js"));
         map.addMapping(new GeneratorMapping(new GeneratorPosition(1, 18), new GeneratorPosition(1, 21), "one.js", "bar"));
         map.addMapping(new GeneratorMapping(new GeneratorPosition(1, 21), new GeneratorPosition(2, 3), "one.js"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(1, 18), new GeneratorPosition(2, 10), "one.js", "baz"));
+        map.addMapping(new GeneratorMapping(new GeneratorPosition(1, 28), new GeneratorPosition(2, 10), "one.js", "baz"));
+        map.addMapping(new GeneratorMapping(new GeneratorPosition(1, 32), new GeneratorPosition(2, 14), "one.js", "bar"));
         map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 1), new GeneratorPosition(1, 1), "two.js"));
         map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 5), new GeneratorPosition(1, 5), "two.js"));
         map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 9), new GeneratorPosition(1, 11), "two.js"));

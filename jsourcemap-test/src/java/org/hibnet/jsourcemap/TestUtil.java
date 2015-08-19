@@ -242,6 +242,14 @@ public class TestUtil {
         Assert.assertEquals(expected, actual);
     }
 
+    static void assertEquals(Integer actual, Integer expected) {
+        Assert.assertEquals(expected, actual);
+    }
+
+    static void assertEquals(Integer actual, Integer expected, String message) {
+        Assert.assertEquals(expected, actual);
+    }
+
     static void assertEquals(long actual, long expected) {
         Assert.assertEquals(expected, actual);
     }

@@ -65,6 +65,9 @@ public class ArraySet<T> {
     }
 
     public void add(T t, Boolean aAllowDuplicates) {
+        if (t == null) {
+            return;
+        }
         boolean isDuplicate = this.has(t);
         int idx = _array.size();
         if (!isDuplicate || (aAllowDuplicates != null && aAllowDuplicates)) {
@@ -82,6 +85,9 @@ public class ArraySet<T> {
      *            aStr
      */
     public boolean has(T t) {
+        if (t == null) {
+            return false;
+        }
         return _set.containsKey(t);
     }
 
@@ -91,7 +97,10 @@ public class ArraySet<T> {
      * @param String
      *            aStr
      */
-    public int indexOf(T t) {
+    public Integer indexOf(T t) {
+        if (t == null) {
+            return null;
+        }
         Integer i = _set.get(t);
         if (i == null) {
             return -1;
@@ -105,7 +114,10 @@ public class ArraySet<T> {
      * @param Number
      *            aIdx
      */
-    public T at(int i) {
+    public T at(Integer i) {
+        if (i == null) {
+            return null;
+        }
         return _array.get(i);
     }
 

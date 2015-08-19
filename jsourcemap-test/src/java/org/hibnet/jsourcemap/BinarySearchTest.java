@@ -16,7 +16,6 @@
 package org.hibnet.jsourcemap;
 
 import static org.hibnet.jsourcemap.TestUtil.assertEquals;
-import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.List;
@@ -33,13 +32,7 @@ public class BinarySearchTest {
     public void testTooHighWithDefaultBias() throws Exception {
         Integer needle = 30;
         List<Integer> haystack = Arrays.asList(2, 4, 6, 8, 10, 12, 14, 16, 18, 20);
-        try {
-            BinarySearch.search(needle, haystack, BinarySearchTest::numberCompare, null);
-            fail("Expecting an error");
-        } catch (RuntimeException e) {
-            // ok
-        }
-
+        BinarySearch.search(needle, haystack, BinarySearchTest::numberCompare, null);
         assertEquals(haystack.get(BinarySearch.search(needle, haystack, BinarySearchTest::numberCompare, null)).intValue(), 20);
     }
 
@@ -47,14 +40,7 @@ public class BinarySearchTest {
     public void testTooLowWithDefaultBias() throws Exception {
         Integer needle = 1;
         List<Integer> haystack = Arrays.asList(2, 4, 6, 8, 10, 12, 14, 16, 18, 20);
-
-        try {
-            BinarySearch.search(needle, haystack, BinarySearchTest::numberCompare, null);
-            fail("Expecting an error");
-        } catch (RuntimeException e) {
-            // ok
-        }
-
+        BinarySearch.search(needle, haystack, BinarySearchTest::numberCompare, null);
         assertEquals(BinarySearch.search(needle, haystack, BinarySearchTest::numberCompare, null), -1);
     }
 
@@ -62,14 +48,7 @@ public class BinarySearchTest {
     public void testTooHighWithLubBias() throws Exception {
         Integer needle = 30;
         List<Integer> haystack = Arrays.asList(2, 4, 6, 8, 10, 12, 14, 16, 18, 20);
-
-        try {
-            BinarySearch.search(needle, haystack, BinarySearchTest::numberCompare, null);
-            fail("Expecting an error");
-        } catch (RuntimeException e) {
-            // ok
-        }
-
+        BinarySearch.search(needle, haystack, BinarySearchTest::numberCompare, null);
         assertEquals(BinarySearch.search(needle, haystack, BinarySearchTest::numberCompare, BinarySearch.Bias.LEAST_UPPER_BOUND), -1);
     }
 
@@ -77,14 +56,7 @@ public class BinarySearchTest {
     public void testTooLowWithLubBias() throws Exception {
         Integer needle = 1;
         List<Integer> haystack = Arrays.asList(2, 4, 6, 8, 10, 12, 14, 16, 18, 20);
-
-        try {
-            BinarySearch.search(needle, haystack, BinarySearchTest::numberCompare, null);
-            fail("Expecting an error");
-        } catch (RuntimeException e) {
-            // ok
-        }
-
+        BinarySearch.search(needle, haystack, BinarySearchTest::numberCompare, null);
         assertEquals(
                 haystack.get(BinarySearch.search(needle, haystack, BinarySearchTest::numberCompare, BinarySearch.Bias.LEAST_UPPER_BOUND)).intValue(),
                 2);

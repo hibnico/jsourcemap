@@ -48,7 +48,7 @@ public class Mapping {
         this.source = source;
     }
 
-    public Mapping(int generatedLine, int generatedColumn, int originalLine, int originalColumn, String source, String name) {
+    public Mapping(int generatedLine, int generatedColumn, Integer originalLine, Integer originalColumn, String source, String name) {
         this.generatedLine = generatedLine;
         this.generatedColumn = generatedColumn;
         this.originalLine = originalLine;

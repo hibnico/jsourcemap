@@ -38,7 +38,7 @@ public abstract class SourceMapConsumer {
     static SourceMapConsumer create(Object aSourceMap) {
         SourceMap sourceMap;
         if (aSourceMap instanceof String) {
-            sourceMap = new SourceMap(((String) aSourceMap).replace("^\\)\\]\\}'", ""));
+            sourceMap = new SourceMap(((String) aSourceMap).replaceAll("^\\)\\]\\}'", ""));
         } else if (aSourceMap instanceof SourceMap) {
             sourceMap = (SourceMap) aSourceMap;
         } else {
@@ -219,7 +219,7 @@ public abstract class SourceMapConsumer {
         // returns the index of the closest mapping less than the needle. By
         // setting needle.originalColumn to 0, we thus find the last mapping for
         // the given line, provided such a mapping exists.
-        ConsumerMapping needle = new ConsumerMapping(line, column == null ? 0 : column);
+        ConsumerMapping needle = new ConsumerMapping(null, null, line, column == null ? 0 : column, null, null);
 
         if (this.sourceRoot != null) {
             source = Util.relative(this.sourceRoot, source);
@@ -245,7 +245,12 @@ public abstract class SourceMapConsumer {
                 // the line we found.
                 while (mapping != null && mapping.originalLine == originalLine) {
                     mappings.add(new Position(mapping));
-                    mapping = this._originalMappings().get(++index);
+                    index++;
+                    if (index >= this._originalMappings().size()) {
+                        mapping = null;
+                    } else {
+                        mapping = this._originalMappings().get(index);
+                    }
                 }
             } else {
                 int originalColumn = mapping.originalColumn;
@@ -256,7 +261,12 @@ public abstract class SourceMapConsumer {
                 // the line we are searching for.
                 while (mapping != null && mapping.originalLine == line && mapping.originalColumn == originalColumn) {
                     mappings.add(new Position(mapping));
-                    mapping = this._originalMappings().get(++index);
+                    index++;
+                    if (index >= this._originalMappings().size()) {
+                        mapping = null;
+                    } else {
+                        mapping = this._originalMappings().get(index);
+                    }
                 }
             }
         }

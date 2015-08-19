@@ -61,7 +61,7 @@ public class BasicSourceMapConsumer extends SourceMapConsumer {
     public BasicSourceMapConsumer(Object aSourceMap) {
         SourceMap sourceMap;
         if (aSourceMap instanceof String) {
-            sourceMap = new SourceMap(((String) aSourceMap).replace("^\\)\\]\\}'", ""));
+            sourceMap = new SourceMap(((String) aSourceMap).replaceAll("^\\)\\]\\}'", ""));
         } else if (aSourceMap instanceof SourceMap) {
             sourceMap = (SourceMap) aSourceMap;
         } else {
@@ -396,7 +396,7 @@ public class BasicSourceMapConsumer extends SourceMapConsumer {
             // many users. We can help them out when they expect file:// URIs to
             // behave like it would if they were running a local HTTP server. See
             // https://bugzilla.mozilla.org/show_bug.cgi?id=885597.
-            String fileUriAbsPath = aSource.replace("^file://", "");
+            String fileUriAbsPath = aSource.replaceAll("^file://", "");
             if (url.scheme.equals("file") && this._sources.has(fileUriAbsPath)) {
                 return this.sourcesContent.get(this._sources.indexOf(fileUriAbsPath));
             }
@@ -440,7 +440,7 @@ public class BasicSourceMapConsumer extends SourceMapConsumer {
         }
         int source_ = this._sources.indexOf(source);
 
-        ConsumerMapping needle = new ConsumerMapping(line, column, null, null, source_, null);
+        ConsumerMapping needle = new ConsumerMapping(null, null, line, column, source_, null);
 
         if (bias == null) {
             bias = Bias.GREATEST_LOWER_BOUND;

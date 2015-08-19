@@ -91,7 +91,7 @@ public class IndexedSourceMapConsumer extends SourceMapConsumer {
     public IndexedSourceMapConsumer(Object aSourceMap) {
         SourceMap sourceMap;
         if (aSourceMap instanceof String) {
-            sourceMap = new SourceMap(((String) aSourceMap).replace("^\\)\\]\\}'", ""));
+            sourceMap = new SourceMap(((String) aSourceMap).replaceAll("^\\)\\]\\}'", ""));
         } else if (aSourceMap instanceof SourceMap) {
             sourceMap = (SourceMap) aSourceMap;
         } else {
@@ -264,18 +264,18 @@ public class IndexedSourceMapConsumer extends SourceMapConsumer {
             ParsedSection section = this._sections.get(i);
             List<ConsumerMapping> sectionMappings = section.consumer._generatedMappings();
             for (int j = 0; j < sectionMappings.size(); j++) {
-                ConsumerMapping mapping = sectionMappings.get(i);
+                ConsumerMapping mapping = sectionMappings.get(j);
 
                 String source = section.consumer._sources.at(mapping.source);
                 if (section.consumer.sourceRoot != null) {
                     source = Util.join(section.consumer.sourceRoot, source);
                 }
                 this._sources.add(source);
-                int source_ = this._sources.indexOf(source);
+                Integer source_ = this._sources.indexOf(source);
 
                 String name = section.consumer._names.at(mapping.name);
                 this._names.add(name);
-                int name_ = this._names.indexOf(name);
+                Integer name_ = this._names.indexOf(name);
 
                 // The mappings coming from the consumer for the section have
                 // generated positions relative to the start of the section, so we

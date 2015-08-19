@@ -44,7 +44,7 @@ public class ArraySetTest {
     public void testIndexOf() throws Exception {
         ArraySet<String> set = makeTestSet();
         for (int i = 0; i < 100; i++) {
-            assertEquals(set.indexOf(String.valueOf(i)), i);
+            assertEquals(set.indexOf(String.valueOf(i)).intValue(), i);
         }
     }
 
@@ -66,10 +66,10 @@ public class ArraySetTest {
         assertTrue(set.has("quux"));
         assertTrue(set.has("hasOwnProperty"));
 
-        assertEquals(set.indexOf("foo"), 0);
-        assertEquals(set.indexOf("bar"), 1);
-        assertEquals(set.indexOf("baz"), 2);
-        assertEquals(set.indexOf("quux"), 3);
+        assertEquals(set.indexOf("foo").intValue(), 0);
+        assertEquals(set.indexOf("bar").intValue(), 1);
+        assertEquals(set.indexOf("baz").intValue(), 2);
+        assertEquals(set.indexOf("quux").intValue(), 3);
 
         assertEquals(set.at(0), "foo");
         assertEquals(set.at(1), "bar");
@@ -82,14 +82,14 @@ public class ArraySetTest {
         ArraySet<String> set = ArraySet.fromArray(Arrays.asList("foo", "foo"), null);
         assertTrue(set.has("foo"));
         assertEquals(set.at(0), "foo");
-        assertEquals(set.indexOf("foo"), 0);
+        assertEquals(set.indexOf("foo").intValue(), 0);
         assertEquals(set.toArray().size(), 1);
 
         set = ArraySet.fromArray(Arrays.asList("foo", "foo"), true);
         assertTrue(set.has("foo"));
         assertEquals(set.at(0), "foo");
         assertEquals(set.at(1), "foo");
-        assertEquals(set.indexOf("foo"), 0);
+        assertEquals(set.indexOf("foo").intValue(), 0);
         assertEquals(set.toArray().size(), 2);
     }
 
@@ -101,14 +101,14 @@ public class ArraySetTest {
         set.add("foo");
         assertTrue(set.has("foo"));
         assertEquals(set.at(0), "foo");
-        assertEquals(set.indexOf("foo"), 0);
+        assertEquals(set.indexOf("foo").intValue(), 0);
         assertEquals(set.toArray().size(), 1);
 
         set.add("foo", true);
         assertTrue(set.has("foo"));
         assertEquals(set.at(0), "foo");
         assertEquals(set.at(1), "foo");
-        assertEquals(set.indexOf("foo"), 0);
+        assertEquals(set.indexOf("foo").intValue(), 0);
         assertEquals(set.toArray().size(), 2);
     }
 

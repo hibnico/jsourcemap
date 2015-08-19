@@ -45,6 +45,9 @@ public class Util {
         parsed.host = match.group(3);
         parsed.port = match.group(4);
         parsed.path = match.group(5);
+        if (parsed.path.length() == 0) {
+            parsed.path = null;
+        }
         return parsed;
     }
 
@@ -84,6 +87,15 @@ public class Util {
         boolean isAbsolute = isAbsolute(path);
 
         String[] parts = path.split("/+");
+
+        // because String.split in JS is returning an empty string and not the Java one
+        if (path.endsWith("/")) {
+            String[] p = new String[parts.length + 1];
+            System.arraycopy(parts, 0, p, 0, parts.length);
+            p[parts.length] = "";
+            parts = p;
+        }
+
         int up = 0;
         for (int i = parts.length - 1; i >= 0; i--) {
             String part = parts[i];
@@ -127,7 +139,7 @@ public class Util {
         ParsedUrl aPathUrl = urlParse(aPath);
         ParsedUrl aRootUrl = urlParse(aRoot);
         if (aRootUrl != null) {
-            aRoot = aRootUrl.path == null ? "/" : aRootUrl.path;
+            aRoot = (aRootUrl.path == null || aRootUrl.path.isEmpty()) ? "/" : aRootUrl.path;
         }
 
         // `join(foo, '//www.example.org')`
@@ -143,12 +155,12 @@ public class Util {
         }
 
         // `join('http://', 'www.example.com')`
-        if (aRootUrl != null && aRootUrl.host == null && aRootUrl.path == null) {
+        if (aRootUrl != null && (aRootUrl.host == null || aRootUrl.host.isEmpty()) && (aRootUrl.path == null || aRootUrl.path.isEmpty())) {
             aRootUrl.host = aPath;
             return urlGenerate(aRootUrl);
         }
 
-        String joined = aPath.charAt(0) == '/' ? aPath : normalize(aRoot.replace("/+$", "") + '/' + aPath);
+        String joined = aPath.charAt(0) == '/' ? aPath : normalize(aRoot.replaceAll("/+$", "") + '/' + aPath);
 
         if (aRootUrl != null) {
             aRootUrl.path = joined;
@@ -158,7 +170,7 @@ public class Util {
     }
 
     static final boolean isAbsolute(String aPath) {
-        return aPath.charAt(0) == '/' || urlRegexp.matcher(aPath).matches();
+        return aPath.length() > 0 && aPath.charAt(0) == '/' || urlRegexp.matcher(aPath).matches();
     }
 
     static final String relative(String aRoot, String aPath) {
@@ -166,7 +178,7 @@ public class Util {
             aRoot = ".";
         }
 
-        aRoot = aRoot.replace("/$", "");
+        aRoot = aRoot.replaceAll("/$", "");
 
         // It is possible for the path to be above the root. In this case, simply
         // checking whether the root is a prefix of the path won't work. Instead, we
@@ -202,37 +214,51 @@ public class Util {
         return aStr.substring(1);
     }
 
+    // mimic the behaviour of i1 - i2 in JS
+    private static final int intcmp(Integer i1, Integer i2) {
+        if (i1 == null && i2 == null) {
+            return 0;
+        }
+        if (i1 == null) {
+            return -i2;
+        }
+        if (i2 == null) {
+            return i1;
+        }
+        return i1 - i2;
+    }
+
     static int compareByOriginalPositions(ConsumerMapping mappingA, ConsumerMapping mappingB) {
         return compareByOriginalPositions(mappingA, mappingB, null);
     }
 
     static int compareByOriginalPositions(ConsumerMapping mappingA, ConsumerMapping mappingB, Boolean onlyCompareOriginal) {
-        int cmp = mappingA.source - mappingB.source;
+        int cmp = intcmp(mappingA.source, mappingB.source);
         if (cmp != 0) {
             return cmp;
         }
 
-        cmp = mappingA.originalLine - mappingB.originalLine;
+        cmp = intcmp(mappingA.originalLine, mappingB.originalLine);
         if (cmp != 0) {
             return cmp;
         }
 
-        cmp = mappingA.originalColumn - mappingB.originalColumn;
+        cmp = intcmp(mappingA.originalColumn, mappingB.originalColumn);
         if (cmp != 0 || (onlyCompareOriginal != null && onlyCompareOriginal)) {
             return cmp;
         }
 
-        cmp = mappingA.generatedColumn - mappingB.generatedColumn;
+        cmp = intcmp(mappingA.generatedColumn, mappingB.generatedColumn);
         if (cmp != 0) {
             return cmp;
         }
 
-        cmp = mappingA.generatedLine - mappingB.generatedLine;
+        cmp = intcmp(mappingA.generatedLine, mappingB.generatedLine);
         if (cmp != 0) {
             return cmp;
         }
 
-        return mappingA.name - mappingB.name;
+        return intcmp(mappingA.name, mappingB.name);
     }
 
     static int compareByGeneratedPositionsDeflated(ConsumerMapping mappingA, ConsumerMapping mappingB) {
@@ -240,61 +266,71 @@ public class Util {
     }
 
     static int compareByGeneratedPositionsDeflated(ConsumerMapping mappingA, ConsumerMapping mappingB, Boolean onlyCompareGenerated) {
-        int cmp = mappingA.generatedLine - mappingB.generatedLine;
+        int cmp = intcmp(mappingA.generatedLine, mappingB.generatedLine);
         if (cmp != 0) {
             return cmp;
         }
 
-        cmp = mappingA.generatedColumn - mappingB.generatedColumn;
+        cmp = intcmp(mappingA.generatedColumn, mappingB.generatedColumn);
         if (cmp != 0 || (onlyCompareGenerated != null && onlyCompareGenerated)) {
             return cmp;
         }
 
-        cmp = mappingA.source - mappingB.source;
+        cmp = intcmp(mappingA.source, mappingB.source);
         if (cmp != 0) {
             return cmp;
         }
 
-        cmp = mappingA.originalLine - mappingB.originalLine;
+        cmp = intcmp(mappingA.originalLine, mappingB.originalLine);
         if (cmp != 0) {
             return cmp;
         }
 
-        cmp = mappingA.originalColumn - mappingB.originalColumn;
+        cmp = intcmp(mappingA.originalColumn, mappingB.originalColumn);
         if (cmp != 0) {
             return cmp;
         }
 
-        return mappingA.name - mappingB.name;
+        return intcmp(mappingA.name, mappingB.name);
+    }
+
+    private static final int strcmp(String aStr1, String aStr2) {
+        if (aStr1 == aStr2 || (aStr1 != null && aStr1.equals(aStr2))) {
+            return 0;
+        }
+        if (aStr1 != null && aStr2 != null && aStr1.compareTo(aStr2) > 0) {
+            return 1;
+        }
+        return -1;
     }
 
     static final int compareByGeneratedPositionsInflated(Mapping mappingA, Mapping mappingB) {
-        int cmp = mappingA.generatedLine - mappingB.generatedLine;
+        int cmp = intcmp(mappingA.generatedLine, mappingB.generatedLine);
         if (cmp != 0) {
             return cmp;
         }
 
-        cmp = mappingA.generatedColumn - mappingB.generatedColumn;
+        cmp = intcmp(mappingA.generatedColumn, mappingB.generatedColumn);
         if (cmp != 0) {
             return cmp;
         }
 
-        cmp = mappingA.source.compareTo(mappingB.source);
+        cmp = strcmp(mappingA.source, mappingB.source);
         if (cmp != 0) {
             return cmp;
         }
 
-        cmp = mappingA.originalLine - mappingB.originalLine;
+        cmp = intcmp(mappingA.originalLine, mappingB.originalLine);
         if (cmp != 0) {
             return cmp;
         }
 
-        cmp = mappingA.originalColumn - mappingB.originalColumn;
+        cmp = intcmp(mappingA.originalColumn, mappingB.originalColumn);
         if (cmp != 0) {
             return cmp;
         }
 
-        return mappingA.name.compareTo(mappingB.name);
+        return strcmp(mappingA.name, mappingB.name);
     }
 
     static final String join(Collection<String> list, String join) {
@@ -312,7 +348,7 @@ public class Util {
 
     private static final String join(int n, String join) {
         StringBuilder buffer = new StringBuilder();
-        for (int i = 0; i < n; i++) {
+        for (int i = 1; i < n; i++) {
             buffer.append(join);
         }
         return buffer.toString();
