@@ -19,7 +19,7 @@
         <description>This module contains the unit tests for the jSourceMap library</description>
     </info>
     <dependencies defaultconf="default->default">
-        <dependency org="org.hibnet" name="jsourcemap" rev="[0.0.1,0.0.2)" />
+        <dependency org="org.hibnet" name="jsourcemap" rev="[0.0.0,0.0.1)" />
 
         <dependency org="junit" name="junit" rev="4.10" />
         <dependency org="org.slf4j" name="slf4j-simple" rev="1.7.10" />
