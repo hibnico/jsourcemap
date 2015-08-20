@@ -42,19 +42,19 @@ public class SourceMapGeneratorTest {
     public void testThatTheCorrectMappingsAreBeingGenerated() throws Exception {
         SourceMapGenerator map = new SourceMapGenerator("min.js", "/the/root");
 
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(1, 1), new GeneratorPosition(1, 1), "one.js"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(1, 5), new GeneratorPosition(1, 5), "one.js"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(1, 9), new GeneratorPosition(1, 11), "one.js"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(1, 18), new GeneratorPosition(1, 21), "one.js", "bar"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(1, 21), new GeneratorPosition(2, 3), "one.js"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(1, 28), new GeneratorPosition(2, 10), "one.js", "baz"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(1, 32), new GeneratorPosition(2, 14), "one.js", "bar"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 1), new GeneratorPosition(1, 1), "two.js"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 5), new GeneratorPosition(1, 5), "two.js"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 9), new GeneratorPosition(1, 11), "two.js"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 18), new GeneratorPosition(1, 21), "two.js", "n"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 21), new GeneratorPosition(2, 3), "two.js"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 28), new GeneratorPosition(2, 10), "two.js", "n"));
+        map.addMapping(new Mapping(new Position(1, 1), new Position(1, 1), "one.js"));
+        map.addMapping(new Mapping(new Position(1, 5), new Position(1, 5), "one.js"));
+        map.addMapping(new Mapping(new Position(1, 9), new Position(1, 11), "one.js"));
+        map.addMapping(new Mapping(new Position(1, 18), new Position(1, 21), "one.js", "bar"));
+        map.addMapping(new Mapping(new Position(1, 21), new Position(2, 3), "one.js"));
+        map.addMapping(new Mapping(new Position(1, 28), new Position(2, 10), "one.js", "baz"));
+        map.addMapping(new Mapping(new Position(1, 32), new Position(2, 14), "one.js", "bar"));
+        map.addMapping(new Mapping(new Position(2, 1), new Position(1, 1), "two.js"));
+        map.addMapping(new Mapping(new Position(2, 5), new Position(1, 5), "two.js"));
+        map.addMapping(new Mapping(new Position(2, 9), new Position(1, 11), "two.js"));
+        map.addMapping(new Mapping(new Position(2, 18), new Position(1, 21), "two.js", "n"));
+        map.addMapping(new Mapping(new Position(2, 21), new Position(2, 3), "two.js"));
+        map.addMapping(new Mapping(new Position(2, 28), new Position(2, 10), "two.js", "n"));
 
         TestUtil.assertEqualMaps(map.toJSON(), TestUtil.testMap);
     }
@@ -62,15 +62,15 @@ public class SourceMapGeneratorTest {
     @Test
     public void testThatAddingAMappingWithAnEmptyStringNameDoesNotBreakGeneration() throws Exception {
         SourceMapGenerator map = new SourceMapGenerator("generated-foo.js", ".");
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(1, 1), new GeneratorPosition(1, 1), "bar.js", ""));
+        map.addMapping(new Mapping(new Position(1, 1), new Position(1, 1), "bar.js", ""));
         map.toJSON();
     }
 
     @Test
     public void testThatSourceContentCanBeSet() throws Exception {
         SourceMapGenerator map = new SourceMapGenerator("min.js", "/the/root");
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(1, 1), new GeneratorPosition(1, 1), "one.js"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 1), new GeneratorPosition(1, 1), "two.js"));
+        map.addMapping(new Mapping(new Position(1, 1), new Position(1, 1), "one.js"));
+        map.addMapping(new Mapping(new Position(2, 1), new Position(1, 1), "two.js"));
         map.setSourceContent("one.js", "one file content");
 
         SourceMap map2 = map.toJSON();
@@ -164,11 +164,11 @@ public class SourceMapGeneratorTest {
 
     private SourceMap buildExpectedMap(String... sources) {
         SourceMapGenerator map = new SourceMapGenerator("bundle.min.js", "..");
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(1, 1), new GeneratorPosition(2, 2), sources[0]));
+        map.addMapping(new Mapping(new Position(1, 1), new Position(2, 2), sources[0]));
         map.setSourceContent(sources[0], "foo coffee");
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(11, 11), new GeneratorPosition(12, 12), sources[1]));
+        map.addMapping(new Mapping(new Position(11, 11), new Position(12, 12), sources[1]));
         map.setSourceContent(sources[1], "bar coffee");
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(21, 21), new GeneratorPosition(22, 22), sources[2]));
+        map.addMapping(new Mapping(new Position(21, 21), new Position(22, 22), sources[2]));
         map.setSourceContent(sources[2], "baz coffee");
         return map.toJSON();
     }
@@ -202,18 +202,18 @@ public class SourceMapGeneratorTest {
         // baz.coffee
 
         SourceMapGenerator bundleMap = new SourceMapGenerator("bundle.js", null);
-        bundleMap.addMapping(new GeneratorMapping(new GeneratorPosition(3, 3), new GeneratorPosition(2, 2), "../../coffee/foo.coffee"));
+        bundleMap.addMapping(new Mapping(new Position(3, 3), new Position(2, 2), "../../coffee/foo.coffee"));
         bundleMap.setSourceContent("../../coffee/foo.coffee", "foo coffee");
-        bundleMap.addMapping(new GeneratorMapping(new GeneratorPosition(13, 13), new GeneratorPosition(12, 12), "/bar.coffee"));
+        bundleMap.addMapping(new Mapping(new Position(13, 13), new Position(12, 12), "/bar.coffee"));
         bundleMap.setSourceContent("/bar.coffee", "bar coffee");
-        bundleMap.addMapping(new GeneratorMapping(new GeneratorPosition(23, 23), new GeneratorPosition(22, 22), "http://www.example.com/baz.coffee"));
+        bundleMap.addMapping(new Mapping(new Position(23, 23), new Position(22, 22), "http://www.example.com/baz.coffee"));
         bundleMap.setSourceContent("http://www.example.com/baz.coffee", "baz coffee");
         SourceMapConsumer bundleMap2 = SourceMapConsumer.create(bundleMap.toJSON());
 
         SourceMapGenerator minifiedMap = new SourceMapGenerator("bundle.min.js", "..");
-        minifiedMap.addMapping(new GeneratorMapping(new GeneratorPosition(1, 1), new GeneratorPosition(3, 3), "temp/bundle.js"));
-        minifiedMap.addMapping(new GeneratorMapping(new GeneratorPosition(11, 11), new GeneratorPosition(13, 13), "temp/bundle.js"));
-        minifiedMap.addMapping(new GeneratorMapping(new GeneratorPosition(21, 21), new GeneratorPosition(23, 23), "temp/bundle.js"));
+        minifiedMap.addMapping(new Mapping(new Position(1, 1), new Position(3, 3), "temp/bundle.js"));
+        minifiedMap.addMapping(new Mapping(new Position(11, 11), new Position(13, 13), "temp/bundle.js"));
+        minifiedMap.addMapping(new Mapping(new Position(21, 21), new Position(23, 23), "temp/bundle.js"));
         SourceMapConsumer minifiedMap2 = SourceMapConsumer.create(minifiedMap.toJSON());
 
         TestUtil.assertEqualMaps(buildActualMap(bundleMap2, minifiedMap2, "../temp/temp_maps"),
@@ -243,10 +243,10 @@ public class SourceMapGeneratorTest {
 
     private void assertName(String coffeeName, String jsName, String expectedName) {
         SourceMapGenerator minifiedMap = new SourceMapGenerator("test.js.min", null);
-        minifiedMap.addMapping(new GeneratorMapping(new GeneratorPosition(1, 4), new GeneratorPosition(1, 4), "test.js", jsName));
+        minifiedMap.addMapping(new Mapping(new Position(1, 4), new Position(1, 4), "test.js", jsName));
 
         SourceMapGenerator coffeeMap = new SourceMapGenerator("test.js", null);
-        coffeeMap.addMapping(new GeneratorMapping(new GeneratorPosition(1, 4), new GeneratorPosition(1, 0), "test.coffee", coffeeName));
+        coffeeMap.addMapping(new Mapping(new Position(1, 4), new Position(1, 0), "test.coffee", coffeeName));
 
         minifiedMap.applySourceMap(SourceMapConsumer.create(coffeeMap.toJSON()), null, null);
 
@@ -287,10 +287,10 @@ public class SourceMapGeneratorTest {
     @Test
     public void testSortingWithDuplicateGeneratedMappings() throws Exception {
         SourceMapGenerator map = new SourceMapGenerator("test.js", null);
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(3, 0), new GeneratorPosition(2, 0), "a.js"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 0)));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 0)));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(1, 0), new GeneratorPosition(1, 0), "a.js"));
+        map.addMapping(new Mapping(new Position(3, 0), new Position(2, 0), "a.js"));
+        map.addMapping(new Mapping(new Position(2, 0)));
+        map.addMapping(new Mapping(new Position(2, 0)));
+        map.addMapping(new Mapping(new Position(1, 0), new Position(1, 0), "a.js"));
 
         SourceMap sourceMap = new SourceMap();
         sourceMap.version = 3;
@@ -305,8 +305,8 @@ public class SourceMapGeneratorTest {
     @Test
     public void testIgnoreDuplicateMappings() throws Exception {
         // null original source location
-        GeneratorMapping nullMapping1 = new GeneratorMapping(new GeneratorPosition(1, 0));
-        GeneratorMapping nullMapping2 = new GeneratorMapping(new GeneratorPosition(2, 2));
+        Mapping nullMapping1 = new Mapping(new Position(1, 0));
+        Mapping nullMapping2 = new Mapping(new Position(2, 2));
 
         SourceMapGenerator map1 = new SourceMapGenerator("min.js", "/the/root");
         SourceMapGenerator map2 = new SourceMapGenerator("min.js", "/the/root");
@@ -326,8 +326,8 @@ public class SourceMapGeneratorTest {
         TestUtil.assertEqualMaps(map1.toJSON(), map2.toJSON());
 
         // original source location
-        GeneratorMapping srcMapping1 = new GeneratorMapping(new GeneratorPosition(1, 0), new GeneratorPosition(11, 0), "srcMapping1.js");
-        GeneratorMapping srcMapping2 = new GeneratorMapping(new GeneratorPosition(2, 2), new GeneratorPosition(11, 0), "srcMapping2.js");
+        Mapping srcMapping1 = new Mapping(new Position(1, 0), new Position(11, 0), "srcMapping1.js");
+        Mapping srcMapping2 = new Mapping(new Position(2, 2), new Position(11, 0), "srcMapping2.js");
 
         map1 = new SourceMapGenerator("min.js", "/the/root");
         map2 = new SourceMapGenerator("min.js", "/the/root");
@@ -347,9 +347,9 @@ public class SourceMapGeneratorTest {
         TestUtil.assertEqualMaps(map1.toJSON(), map2.toJSON());
 
         // full original source and name information
-        GeneratorMapping fullMapping1 = new GeneratorMapping(new GeneratorPosition(1, 0), new GeneratorPosition(11, 0), "fullMapping1.js",
+        Mapping fullMapping1 = new Mapping(new Position(1, 0), new Position(11, 0), "fullMapping1.js",
                 "fullMapping1");
-        GeneratorMapping fullMapping2 = new GeneratorMapping(new GeneratorPosition(2, 2), new GeneratorPosition(11, 0), "fullMapping2.js",
+        Mapping fullMapping2 = new Mapping(new Position(2, 2), new Position(11, 0), "fullMapping2.js",
                 "fullMapping2");
 
         map1 = new SourceMapGenerator("min.js", "/the/root");
@@ -373,8 +373,8 @@ public class SourceMapGeneratorTest {
     @Test
     public void testGithubIssue_72_CheckForDuplicateNamesOrSources() throws Exception {
         SourceMapGenerator map = new SourceMapGenerator("test.js", null);
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(1, 1), new GeneratorPosition(2, 2), "a.js", "foo"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(3, 3), new GeneratorPosition(4, 4), "a.js", "foo"));
+        map.addMapping(new Mapping(new Position(1, 1), new Position(2, 2), "a.js", "foo"));
+        map.addMapping(new Mapping(new Position(3, 3), new Position(4, 4), "a.js", "foo"));
 
         SourceMap sourceMap = new SourceMap();
         sourceMap.version = 3;
@@ -395,15 +395,15 @@ public class SourceMapGeneratorTest {
     @Test
     public void testApplySourceMapWithUnexactMatch() throws Exception {
         SourceMapGenerator map1 = new SourceMapGenerator("bundled-source", null);
-        map1.addMapping(new GeneratorMapping(new GeneratorPosition(1, 4), new GeneratorPosition(1, 4), "transformed-source"));
-        map1.addMapping(new GeneratorMapping(new GeneratorPosition(2, 4), new GeneratorPosition(2, 4), "transformed-source"));
+        map1.addMapping(new Mapping(new Position(1, 4), new Position(1, 4), "transformed-source"));
+        map1.addMapping(new Mapping(new Position(2, 4), new Position(2, 4), "transformed-source"));
 
         SourceMapGenerator map2 = new SourceMapGenerator("transformed-source", null);
-        map2.addMapping(new GeneratorMapping(new GeneratorPosition(2, 0), new GeneratorPosition(1, 0), "original-source"));
+        map2.addMapping(new Mapping(new Position(2, 0), new Position(1, 0), "original-source"));
 
         SourceMapGenerator expectedMap = new SourceMapGenerator("bundled-source", null);
-        expectedMap.addMapping(new GeneratorMapping(new GeneratorPosition(1, 4), new GeneratorPosition(1, 4), "transformed-source"));
-        expectedMap.addMapping(new GeneratorMapping(new GeneratorPosition(2, 4), new GeneratorPosition(1, 0), "original-source"));
+        expectedMap.addMapping(new Mapping(new Position(1, 4), new Position(1, 4), "transformed-source"));
+        expectedMap.addMapping(new Mapping(new Position(2, 4), new Position(1, 0), "original-source"));
 
         map1.applySourceMap(SourceMapConsumer.create(map2.toJSON()), null, null);
 
@@ -413,8 +413,8 @@ public class SourceMapGeneratorTest {
     @Test
     public void testIssue_192() throws Exception {
         SourceMapGenerator generator = new SourceMapGenerator(null, null);
-        generator.addMapping(new GeneratorMapping(new GeneratorPosition(1, 10), new GeneratorPosition(1, 10), "a.js"));
-        generator.addMapping(new GeneratorMapping(new GeneratorPosition(1, 10), new GeneratorPosition(2, 20), "b.js"));
+        generator.addMapping(new Mapping(new Position(1, 10), new Position(1, 10), "a.js"));
+        generator.addMapping(new Mapping(new Position(1, 10), new Position(2, 20), "b.js"));
 
         SourceMapConsumer consumer = SourceMapConsumer.create(generator.toJSON());
 

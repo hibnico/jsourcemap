@@ -15,26 +15,20 @@
  */
 package org.hibnet.jsourcemap;
 
-public class GeneratorMapping {
-    GeneratorPosition generated;
-    GeneratorPosition original;
-    String source;
-    String name;
+public class GeneratedPosition extends Position {
 
-    public GeneratorMapping(GeneratorPosition generated) {
-        this.generated = generated;
+    Integer lastColumn;
+
+    public GeneratedPosition() {
+        super(null, null);// not found position
     }
 
-    public GeneratorMapping(GeneratorPosition generated, GeneratorPosition original, String source) {
-        this.generated = generated;
-        this.original = original;
-        this.source = source;
+    public GeneratedPosition(Integer line, Integer column, Integer lastColumn) {
+        super(line, column);
+        this.lastColumn = lastColumn;
     }
 
-    public GeneratorMapping(GeneratorPosition generated, GeneratorPosition original, String source, String name) {
-        this.generated = generated;
-        this.original = original;
-        this.source = source;
-        this.name = name;
+    public Integer getLastColumn() {
+        return lastColumn;
     }
 }

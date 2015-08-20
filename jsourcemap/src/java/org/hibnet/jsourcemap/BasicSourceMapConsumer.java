@@ -56,18 +56,9 @@ import org.hibnet.jsourcemap.Util.ParsedUrl;
  * 
  * [0]: https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit?pli=1#
  */
-public class BasicSourceMapConsumer extends SourceMapConsumer {
+class BasicSourceMapConsumer extends SourceMapConsumer {
 
-    public BasicSourceMapConsumer(Object aSourceMap) {
-        SourceMap sourceMap;
-        if (aSourceMap instanceof String) {
-            sourceMap = new SourceMap(((String) aSourceMap).replaceAll("^\\)\\]\\}'", ""));
-        } else if (aSourceMap instanceof SourceMap) {
-            sourceMap = (SourceMap) aSourceMap;
-        } else {
-            throw new IllegalArgumentException();
-        }
-
+    BasicSourceMapConsumer(SourceMap sourceMap) {
         int version = sourceMap.version;
         List<String> sources = sourceMap.sources;
         // Sass 3.3 leaves out the 'names' array, so we deviate from the spec (which
@@ -136,19 +127,19 @@ public class BasicSourceMapConsumer extends SourceMapConsumer {
         // strikes again! See github issue #191.
 
         List<Mapping> generatedMappings = new ArrayList<>(aSourceMap._mappings.toArray());
-        List<ConsumerMapping> destGeneratedMappings = smc.__generatedMappings = new ArrayList<>();
-        List<ConsumerMapping> destOriginalMappings = smc.__originalMappings = new ArrayList<>();
+        List<ParsedMapping> destGeneratedMappings = smc.__generatedMappings = new ArrayList<>();
+        List<ParsedMapping> destOriginalMappings = smc.__originalMappings = new ArrayList<>();
 
         for (int i = 0, length = generatedMappings.size(); i < length; i++) {
             Mapping srcMapping = generatedMappings.get(i);
-            ConsumerMapping destMapping = new ConsumerMapping();
-            destMapping.generatedLine = srcMapping.generatedLine;
-            destMapping.generatedColumn = srcMapping.generatedColumn;
+            ParsedMapping destMapping = new ParsedMapping();
+            destMapping.generatedLine = srcMapping.generated.line;
+            destMapping.generatedColumn = srcMapping.generated.column;
 
             if (srcMapping.source != null) {
                 destMapping.source = sources.indexOf(srcMapping.source);
-                destMapping.originalLine = srcMapping.originalLine;
-                destMapping.originalColumn = srcMapping.originalColumn;
+                destMapping.originalLine = srcMapping.original.line;
+                destMapping.originalColumn = srcMapping.original.column;
                 if (srcMapping.name != null) {
                     destMapping.name = names.indexOf(srcMapping.name);
                 }
@@ -169,7 +160,7 @@ public class BasicSourceMapConsumer extends SourceMapConsumer {
     int _version = 3;
 
     @Override
-    protected List<String> sources() {
+    public List<String> sources() {
         return this._sources.toArray().stream().map(s -> this.sourceRoot != null ? Util.join(this.sourceRoot, s) : s).collect(Collectors.toList());
     }
 
@@ -189,9 +180,9 @@ public class BasicSourceMapConsumer extends SourceMapConsumer {
         int index = 0;
         Map<String, List<Integer>> cachedSegments = new HashMap<>();
         Base64VLQResult temp;
-        List<ConsumerMapping> originalMappings = new ArrayList<>();
-        List<ConsumerMapping> generatedMappings = new ArrayList<>();
-        ConsumerMapping mapping;
+        List<ParsedMapping> originalMappings = new ArrayList<>();
+        List<ParsedMapping> generatedMappings = new ArrayList<>();
+        ParsedMapping mapping;
         String str;
         List<Integer> segment;
         int end;
@@ -205,7 +196,7 @@ public class BasicSourceMapConsumer extends SourceMapConsumer {
             } else if (aStr.charAt(index) == ',') {
                 index++;
             } else {
-                mapping = new ConsumerMapping();
+                mapping = new ParsedMapping();
                 mapping.generatedLine = generatedLine;
 
                 // Because each offset is encoded relative to the previous one,
@@ -288,14 +279,14 @@ public class BasicSourceMapConsumer extends SourceMapConsumer {
      */
     void computeColumnSpans() {
         for (int index = 0; index < _generatedMappings().size(); ++index) {
-            ConsumerMapping mapping = _generatedMappings().get(index);
+            ParsedMapping mapping = _generatedMappings().get(index);
 
             // Mappings do not contain a field for the last generated columnt. We
             // can come up with an optimistic estimate, however, by assuming that
             // mappings are contiguous (i.e. given two consecutive mappings, the
             // first mapping ends where the second one starts).
             if (index + 1 < _generatedMappings().size()) {
-                ConsumerMapping nextMapping = _generatedMappings().get(index + 1);
+                ParsedMapping nextMapping = _generatedMappings().get(index + 1);
 
                 if (mapping.generatedLine == nextMapping.generatedLine) {
                     mapping.lastGeneratedColumn = nextMapping.generatedColumn - 1;
@@ -327,8 +318,8 @@ public class BasicSourceMapConsumer extends SourceMapConsumer {
      * </ul>
      */
     @Override
-    OriginalMapping originalPositionFor(int line, int column, Bias bias) {
-        ConsumerMapping needle = new ConsumerMapping(line, column);
+    public OriginalPosition originalPositionFor(int line, int column, Bias bias) {
+        ParsedMapping needle = new ParsedMapping(line, column);
         if (bias == null) {
             bias = Bias.GREATEST_LOWER_BOUND;
         }
@@ -336,7 +327,7 @@ public class BasicSourceMapConsumer extends SourceMapConsumer {
                 (mapping1, mapping2) -> Util.compareByGeneratedPositionsDeflated(mapping1, mapping2, true), bias);
 
         if (index >= 0) {
-            ConsumerMapping mapping = this._generatedMappings().get(index);
+            ParsedMapping mapping = this._generatedMappings().get(index);
 
             if (mapping.generatedLine == needle.generatedLine)
 
@@ -354,18 +345,18 @@ public class BasicSourceMapConsumer extends SourceMapConsumer {
                 if (name != null) {
                     name_ = this._names.at(name);
                 }
-                return new OriginalMapping(mapping.originalLine, mapping.originalColumn, source_, name_);
+                return new OriginalPosition(mapping.originalLine, mapping.originalColumn, source_, name_);
             }
 
         }
-        return new OriginalMapping();
+        return new OriginalPosition();
     }
 
     /**
      * Return true if we have the source content for every source in the source map, false otherwise.
      */
     @Override
-    boolean hasContentsOfAllSources() {
+    public boolean hasContentsOfAllSources() {
         if (sourcesContent == null) {
             return false;
         }
@@ -431,16 +422,16 @@ public class BasicSourceMapConsumer extends SourceMapConsumer {
      * - line: The line number in the generated source, or null. - column: The column number in the generated source, or null.
      */
     @Override
-    Position generatedPositionFor(String source, int line, int column, Bias bias) {
+    public GeneratedPosition generatedPositionFor(String source, int line, int column, Bias bias) {
         if (this.sourceRoot != null) {
             source = Util.relative(this.sourceRoot, source);
         }
         if (!this._sources.has(source)) {
-            return new Position();
+            return new GeneratedPosition();
         }
         int source_ = this._sources.indexOf(source);
 
-        ConsumerMapping needle = new ConsumerMapping(null, null, line, column, source_, null);
+        ParsedMapping needle = new ParsedMapping(null, null, line, column, source_, null);
 
         if (bias == null) {
             bias = Bias.GREATEST_LOWER_BOUND;
@@ -450,15 +441,15 @@ public class BasicSourceMapConsumer extends SourceMapConsumer {
                 (mapping1, mapping2) -> Util.compareByOriginalPositions(mapping1, mapping2, true), bias);
 
         if (index >= 0) {
-            ConsumerMapping mapping = this._originalMappings().get(index);
+            ParsedMapping mapping = this._originalMappings().get(index);
 
             if (mapping.source == needle.source) {
-                return new Position(mapping.generatedLine != null ? mapping.generatedLine : null,
+                return new GeneratedPosition(mapping.generatedLine != null ? mapping.generatedLine : null,
                         mapping.generatedColumn != null ? mapping.generatedColumn : null,
                         mapping.lastGeneratedColumn != null ? mapping.lastGeneratedColumn : null);
             }
         }
 
-        return new Position();
+        return new GeneratedPosition();
     }
 }

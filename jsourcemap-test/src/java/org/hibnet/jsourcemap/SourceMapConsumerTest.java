@@ -25,9 +25,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibnet.jsourcemap.Section.Offset;
 import org.hibnet.jsourcemap.SourceMapConsumer.Order;
-import org.hibnet.jsourcemap.SourceMapConsumer.Position;
 import org.junit.Test;
 
 public class SourceMapConsumerTest {
@@ -71,7 +69,7 @@ public class SourceMapConsumerTest {
     @Test
     public void testThatTheSourceRootIsReflectedInAMappingsSourceField() throws Exception {
         SourceMapConsumer map;
-        OriginalMapping mapping;
+        OriginalPosition mapping;
 
         map = SourceMapConsumer.create(TestUtil.testMap);
 
@@ -191,9 +189,9 @@ public class SourceMapConsumerTest {
     @Test
     public void testMappingsAndEndOfLines() throws Exception {
         SourceMapGenerator smg = new SourceMapGenerator("foo.js", null);
-        smg.addMapping(new GeneratorMapping(new GeneratorPosition(1, 1), new GeneratorPosition(1, 1), "bar.js"));
-        smg.addMapping(new GeneratorMapping(new GeneratorPosition(2, 2), new GeneratorPosition(2, 2), "bar.js"));
-        smg.addMapping(new GeneratorMapping(new GeneratorPosition(1, 1), new GeneratorPosition(1, 1), "baz.js"));
+        smg.addMapping(new Mapping(new Position(1, 1), new Position(1, 1), "bar.js"));
+        smg.addMapping(new Mapping(new Position(2, 2), new Position(2, 2), "bar.js"));
+        smg.addMapping(new Mapping(new Position(1, 1), new Position(1, 1), "baz.js"));
 
         SourceMapConsumer map = SourceMapConsumer.fromSourceMap(smg);
 
@@ -217,15 +215,15 @@ public class SourceMapConsumerTest {
         int[] previousColumn = new int[1];
         previousColumn[0] = Integer.MIN_VALUE;
         map.eachMapping().forEach(mapping -> {
-            assertTrue(mapping.generatedLine >= previousLine[0]);
+            assertTrue(mapping.generated.line >= previousLine[0]);
 
             assertTrue(mapping.source.equals("/the/root/one.js") || mapping.source.equals("/the/root/two.js"));
 
-            if (mapping.generatedLine == previousLine[0]) {
-                assertTrue(mapping.generatedColumn >= previousColumn[0]);
-                previousColumn[0] = mapping.generatedColumn;
+            if (mapping.generated.line == previousLine[0]) {
+                assertTrue(mapping.generated.column >= previousColumn[0]);
+                previousColumn[0] = mapping.generated.column;
             } else {
-                previousLine[0] = mapping.generatedLine;
+                previousLine[0] = mapping.generated.line;
                 previousColumn[0] = Integer.MIN_VALUE;
             }
         });
@@ -249,17 +247,17 @@ public class SourceMapConsumerTest {
         int[] previousColumn = new int[1];
         previousColumn[0] = Integer.MIN_VALUE;
         map.eachMapping().forEach(mapping -> {
-            assertTrue(mapping.generatedLine >= previousLine[0]);
+            assertTrue(mapping.generated.line >= previousLine[0]);
 
             if (mapping.source != null) {
                 assertEquals(mapping.source.indexOf(TestUtil.testMap.sourceRoot), 0);
             }
 
-            if (mapping.generatedLine == previousLine[0]) {
-                assertTrue(mapping.generatedColumn >= previousColumn[0]);
-                previousColumn[0] = mapping.generatedColumn;
+            if (mapping.generated.line == previousLine[0]) {
+                assertTrue(mapping.generated.column >= previousColumn[0]);
+                previousColumn[0] = mapping.generated.column;
             } else {
-                previousLine[0] = mapping.generatedLine;
+                previousLine[0] = mapping.generated.line;
                 previousColumn[0] = Integer.MIN_VALUE;
             }
         });
@@ -278,13 +276,13 @@ public class SourceMapConsumerTest {
             assertTrue(mapping.source.compareTo(previousSource[0]) >= 0);
 
             if (mapping.source == previousSource[0]) {
-                assertTrue(mapping.originalLine >= previousLine[0]);
+                assertTrue(mapping.original.line >= previousLine[0]);
 
-                if (mapping.originalLine == previousLine[0]) {
-                    assertTrue(mapping.originalColumn >= previousColumn[0]);
-                    previousColumn[0] = mapping.originalColumn;
+                if (mapping.original.line == previousLine[0]) {
+                    assertTrue(mapping.original.column >= previousColumn[0]);
+                    previousColumn[0] = mapping.original.column;
                 } else {
-                    previousLine[0] = mapping.originalLine;
+                    previousLine[0] = mapping.original.line;
                     previousColumn[0] = Integer.MIN_VALUE;
                 }
             } else {
@@ -308,13 +306,13 @@ public class SourceMapConsumerTest {
             assertTrue(mapping.source.compareTo(previousSource[0]) >= 0);
 
             if (mapping.source == previousSource[0]) {
-                assertTrue(mapping.originalLine >= previousLine[0]);
+                assertTrue(mapping.original.line >= previousLine[0]);
 
-                if (mapping.originalLine == previousLine[0]) {
-                    assertTrue(mapping.originalColumn >= previousColumn[0]);
-                    previousColumn[0] = mapping.originalColumn;
+                if (mapping.original.line == previousLine[0]) {
+                    assertTrue(mapping.original.column >= previousColumn[0]);
+                    previousColumn[0] = mapping.original.column;
                 } else {
-                    previousLine[0] = mapping.originalLine;
+                    previousLine[0] = mapping.original.line;
                     previousColumn[0] = Integer.MIN_VALUE;
                 }
             } else {
@@ -440,7 +438,7 @@ public class SourceMapConsumerTest {
     public void testHasContentsOfAllSources_SingleSourceWithContents() throws Exception {
         // Has one source: foo.js (with contents).
         SourceMapGenerator mapWithContents = new SourceMapGenerator(null, null);
-        mapWithContents.addMapping(new GeneratorMapping(new GeneratorPosition(1, 10), new GeneratorPosition(1, 10), "foo.js"));
+        mapWithContents.addMapping(new Mapping(new Position(1, 10), new Position(1, 10), "foo.js"));
         mapWithContents.setSourceContent("foo.js", "content of foo.js");
         SourceMapConsumer consumer = SourceMapConsumer.create(mapWithContents.toJSON());
         assertTrue(consumer.hasContentsOfAllSources());
@@ -450,7 +448,7 @@ public class SourceMapConsumerTest {
     public void testHasContentsOfAllSources_SingleSourceWithoutContents() throws Exception {
         // Has one source: foo.js (without contents).
         SourceMapGenerator mapWithoutContents = new SourceMapGenerator(null, null);
-        mapWithoutContents.addMapping(new GeneratorMapping(new GeneratorPosition(1, 1), new GeneratorPosition(1, 10), "foo.js"));
+        mapWithoutContents.addMapping(new Mapping(new Position(1, 1), new Position(1, 10), "foo.js"));
         SourceMapConsumer consumer = SourceMapConsumer.create(mapWithoutContents.toJSON());
         assertTrue(!consumer.hasContentsOfAllSources());
     }
@@ -459,8 +457,8 @@ public class SourceMapConsumerTest {
     public void testHasContentsOfAllSources_TwoSourcesWithContents() throws Exception {
         // Has two sources: foo.js (with contents) and bar.js (with contents).
         SourceMapGenerator mapWithBothContents = new SourceMapGenerator(null, null);
-        mapWithBothContents.addMapping(new GeneratorMapping(new GeneratorPosition(1, 10), new GeneratorPosition(1, 10), "foo.js"));
-        mapWithBothContents.addMapping(new GeneratorMapping(new GeneratorPosition(1, 10), new GeneratorPosition(1, 10), "bar.js"));
+        mapWithBothContents.addMapping(new Mapping(new Position(1, 10), new Position(1, 10), "foo.js"));
+        mapWithBothContents.addMapping(new Mapping(new Position(1, 10), new Position(1, 10), "bar.js"));
         mapWithBothContents.setSourceContent("foo.js", "content of foo.js");
         mapWithBothContents.setSourceContent("bar.js", "content of bar.js");
         SourceMapConsumer consumer = SourceMapConsumer.create(mapWithBothContents.toJSON());
@@ -471,8 +469,8 @@ public class SourceMapConsumerTest {
     public void testHasContentsOfAllSources_TwoSourcesOneWithAndOneWithoutContents() throws Exception {
         // Has two sources: foo.js (with contents) and bar.js (without contents).
         SourceMapGenerator mapWithoutSomeContents = new SourceMapGenerator(null, null);
-        mapWithoutSomeContents.addMapping(new GeneratorMapping(new GeneratorPosition(1, 10), new GeneratorPosition(1, 10), "foo.js"));
-        mapWithoutSomeContents.addMapping(new GeneratorMapping(new GeneratorPosition(1, 10), new GeneratorPosition(1, 10), "bar.js"));
+        mapWithoutSomeContents.addMapping(new Mapping(new Position(1, 10), new Position(1, 10), "foo.js"));
+        mapWithoutSomeContents.addMapping(new Mapping(new Position(1, 10), new Position(1, 10), "bar.js"));
         mapWithoutSomeContents.setSourceContent("foo.js", "content of foo.js");
         SourceMapConsumer consumer = SourceMapConsumer.create(mapWithoutSomeContents.toJSON());
         assertTrue(!consumer.hasContentsOfAllSources());
@@ -481,12 +479,12 @@ public class SourceMapConsumerTest {
     @Test
     public void testSourceRoot_generatedPositionFor() throws Exception {
         SourceMapGenerator map = new SourceMapGenerator("baz.js", "foo/bar");
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 2), new GeneratorPosition(1, 1), "bang.coffee"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(6, 6), new GeneratorPosition(5, 5), "bang.coffee"));
+        map.addMapping(new Mapping(new Position(2, 2), new Position(1, 1), "bang.coffee"));
+        map.addMapping(new Mapping(new Position(6, 6), new Position(5, 5), "bang.coffee"));
         SourceMapConsumer map2 = SourceMapConsumer.create(map.toJSON());
 
         // Should handle without sourceRoot.
-        Position pos = map2.generatedPositionFor("bang.coffee", 1, 1, null);
+        GeneratedPosition pos = map2.generatedPositionFor("bang.coffee", 1, 1, null);
 
         assertEquals(pos.line.intValue(), 2);
         assertEquals(pos.column.intValue(), 2);
@@ -501,11 +499,11 @@ public class SourceMapConsumerTest {
     @Test
     public void testSourceRoot_generatedPositionFor_ForPathAboveTheRoot() throws Exception {
         SourceMapGenerator map = new SourceMapGenerator("baz.js", "foo/bar");
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 2), new GeneratorPosition(1, 1), "../bang.coffee"));
+        map.addMapping(new Mapping(new Position(2, 2), new Position(1, 1), "../bang.coffee"));
         SourceMapConsumer map2 = SourceMapConsumer.create(map.toJSON());
 
         // Should handle with sourceRoot.
-        Position pos = map2.generatedPositionFor("foo/bang.coffee", 1, 1, null);
+        GeneratedPosition pos = map2.generatedPositionFor("foo/bang.coffee", 1, 1, null);
 
         assertEquals(pos.line.intValue(), 2);
         assertEquals(pos.column.intValue(), 2);
@@ -514,14 +512,14 @@ public class SourceMapConsumerTest {
     @Test
     public void testAllGeneratedPositionsFor_ForLine() throws Exception {
         SourceMapGenerator map = new SourceMapGenerator("generated.js", null);
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 2), new GeneratorPosition(1, 1), "foo.coffee"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 2), new GeneratorPosition(1, 1), "bar.coffee"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(3, 2), new GeneratorPosition(2, 1), "bar.coffee"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(3, 3), new GeneratorPosition(2, 2), "bar.coffee"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(4, 2), new GeneratorPosition(3, 1), "bar.coffee"));
+        map.addMapping(new Mapping(new Position(2, 2), new Position(1, 1), "foo.coffee"));
+        map.addMapping(new Mapping(new Position(2, 2), new Position(1, 1), "bar.coffee"));
+        map.addMapping(new Mapping(new Position(3, 2), new Position(2, 1), "bar.coffee"));
+        map.addMapping(new Mapping(new Position(3, 3), new Position(2, 2), "bar.coffee"));
+        map.addMapping(new Mapping(new Position(4, 2), new Position(3, 1), "bar.coffee"));
         SourceMapConsumer map2 = SourceMapConsumer.create(map.toJSON());
 
-        List<Position> mappings = map2.allGeneratedPositionsFor(2, null, "bar.coffee");
+        List<GeneratedPosition> mappings = map2.allGeneratedPositionsFor(2, null, "bar.coffee");
 
         assertEquals(mappings.size(), 2);
         assertEquals(mappings.get(0).line.intValue(), 3);
@@ -533,12 +531,12 @@ public class SourceMapConsumerTest {
     @Test
     public void testAllGeneratedPositionsFor_ForLineFuzzy() throws Exception {
         SourceMapGenerator map = new SourceMapGenerator("generated.js", null);
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 2), new GeneratorPosition(1, 1), "foo.coffee"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 2), new GeneratorPosition(1, 1), "bar.coffee"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(4, 2), new GeneratorPosition(3, 1), "bar.coffee"));
+        map.addMapping(new Mapping(new Position(2, 2), new Position(1, 1), "foo.coffee"));
+        map.addMapping(new Mapping(new Position(2, 2), new Position(1, 1), "bar.coffee"));
+        map.addMapping(new Mapping(new Position(4, 2), new Position(3, 1), "bar.coffee"));
         SourceMapConsumer map2 = SourceMapConsumer.create(map.toJSON());
 
-        List<Position> mappings = map2.allGeneratedPositionsFor(2, null, "bar.coffee");
+        List<GeneratedPosition> mappings = map2.allGeneratedPositionsFor(2, null, "bar.coffee");
         assertEquals(mappings.size(), 1);
         assertEquals(mappings.get(0).line.intValue(), 4);
         assertEquals(mappings.get(0).column.intValue(), 2);
@@ -549,7 +547,7 @@ public class SourceMapConsumerTest {
         SourceMapGenerator map = new SourceMapGenerator("generated.js", null);
         SourceMapConsumer map2 = SourceMapConsumer.create(map.toJSON());
 
-        List<Position> mappings = map2.allGeneratedPositionsFor(2, null, "bar.coffee");
+        List<GeneratedPosition> mappings = map2.allGeneratedPositionsFor(2, null, "bar.coffee");
 
         assertEquals(mappings.size(), 0);
     }
@@ -557,11 +555,11 @@ public class SourceMapConsumerTest {
     @Test
     public void testAllGeneratedPositionsForForColumn() throws Exception {
         SourceMapGenerator map = new SourceMapGenerator("generated.js", null);
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(1, 2), new GeneratorPosition(1, 1), "foo.coffee"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(1, 3), new GeneratorPosition(1, 1), "foo.coffee"));
+        map.addMapping(new Mapping(new Position(1, 2), new Position(1, 1), "foo.coffee"));
+        map.addMapping(new Mapping(new Position(1, 3), new Position(1, 1), "foo.coffee"));
         SourceMapConsumer map2 = SourceMapConsumer.create(map.toJSON());
 
-        List<Position> mappings = map2.allGeneratedPositionsFor(1, 1, "foo.coffee");
+        List<GeneratedPosition> mappings = map2.allGeneratedPositionsFor(1, 1, "foo.coffee");
 
         assertEquals(mappings.size(), 2);
         assertEquals(mappings.get(0).line.intValue(), 1);
@@ -573,11 +571,11 @@ public class SourceMapConsumerTest {
     @Test
     public void testAllGeneratedPositionsFor_ForColumnFuzzy() throws Exception {
         SourceMapGenerator map = new SourceMapGenerator("generated.js", null);
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(1, 2), new GeneratorPosition(1, 1), "foo.coffee"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(1, 3), new GeneratorPosition(1, 1), "foo.coffee"));
+        map.addMapping(new Mapping(new Position(1, 2), new Position(1, 1), "foo.coffee"));
+        map.addMapping(new Mapping(new Position(1, 3), new Position(1, 1), "foo.coffee"));
         SourceMapConsumer map2 = SourceMapConsumer.create(map.toJSON());
 
-        List<Position> mappings = map2.allGeneratedPositionsFor(1, 0, "foo.coffee");
+        List<GeneratedPosition> mappings = map2.allGeneratedPositionsFor(1, 0, "foo.coffee");
 
         assertEquals(mappings.size(), 2);
         assertEquals(mappings.get(0).line.intValue(), 1);
@@ -589,11 +587,11 @@ public class SourceMapConsumerTest {
     @Test
     public void testAllGeneratedPositionsFor_ForColumnOnDifferentLineFuzzy() throws Exception {
         SourceMapGenerator map = new SourceMapGenerator("generated.js", null);
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 2), new GeneratorPosition(2, 1), "foo.coffee"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 3), new GeneratorPosition(2, 1), "foo.coffee"));
+        map.addMapping(new Mapping(new Position(2, 2), new Position(2, 1), "foo.coffee"));
+        map.addMapping(new Mapping(new Position(2, 3), new Position(2, 1), "foo.coffee"));
         SourceMapConsumer map2 = SourceMapConsumer.create(map.toJSON());
 
-        List<Position> mappings = map2.allGeneratedPositionsFor(1, 0, "foo.coffee");
+        List<GeneratedPosition> mappings = map2.allGeneratedPositionsFor(1, 0, "foo.coffee");
 
         assertEquals(mappings.size(), 0);
     }
@@ -601,17 +599,17 @@ public class SourceMapConsumerTest {
     @Test
     public void testComputeColumnSpans() throws Exception {
         SourceMapGenerator map = new SourceMapGenerator("generated.js", null);
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(1, 1), new GeneratorPosition(1, 1), "foo.coffee"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 1), new GeneratorPosition(2, 1), "foo.coffee"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 10), new GeneratorPosition(2, 2), "foo.coffee"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 20), new GeneratorPosition(2, 3), "foo.coffee"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(3, 1), new GeneratorPosition(3, 1), "foo.coffee"));
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(3, 2), new GeneratorPosition(3, 2), "foo.coffee"));
+        map.addMapping(new Mapping(new Position(1, 1), new Position(1, 1), "foo.coffee"));
+        map.addMapping(new Mapping(new Position(2, 1), new Position(2, 1), "foo.coffee"));
+        map.addMapping(new Mapping(new Position(2, 10), new Position(2, 2), "foo.coffee"));
+        map.addMapping(new Mapping(new Position(2, 20), new Position(2, 3), "foo.coffee"));
+        map.addMapping(new Mapping(new Position(3, 1), new Position(3, 1), "foo.coffee"));
+        map.addMapping(new Mapping(new Position(3, 2), new Position(3, 2), "foo.coffee"));
         SourceMapConsumer map2 = SourceMapConsumer.create(map.toJSON());
 
         ((BasicSourceMapConsumer) map2).computeColumnSpans();
 
-        List<Position> mappings = map2.allGeneratedPositionsFor(1, null, "foo.coffee");
+        List<GeneratedPosition> mappings = map2.allGeneratedPositionsFor(1, null, "foo.coffee");
 
         assertEquals(mappings.size(), 1);
         assertEquals(mappings.get(0).lastColumn.intValue(), Integer.MAX_VALUE);
@@ -633,10 +631,10 @@ public class SourceMapConsumerTest {
     @Test
     public void testSourceRoot_originalPositionFor() throws Exception {
         SourceMapGenerator map = new SourceMapGenerator("baz.js", "foo/bar");
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 2), new GeneratorPosition(1, 1), "bang.coffee"));
+        map.addMapping(new Mapping(new Position(2, 2), new Position(1, 1), "bang.coffee"));
         SourceMapConsumer map2 = SourceMapConsumer.create(map.toJSON());
 
-        OriginalMapping pos = map2.originalPositionFor(2, 2, null);
+        OriginalPosition pos = map2.originalPositionFor(2, 2, null);
 
         // Should always have the prepended source root
         assertEquals(pos.source, "foo/bar/bang.coffee");
@@ -647,7 +645,7 @@ public class SourceMapConsumerTest {
     @Test
     public void testGithubIssue_56() throws Exception {
         SourceMapGenerator map = new SourceMapGenerator("www.example.com/foo.js", "http://");
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 2), new GeneratorPosition(1, 1), "www.example.com/original.js"));
+        map.addMapping(new Mapping(new Position(2, 2), new Position(1, 1), "www.example.com/original.js"));
         SourceMapConsumer map2 = SourceMapConsumer.create(map.toJSON());
 
         List<String> sources = map2.sources();
@@ -659,7 +657,7 @@ public class SourceMapConsumerTest {
     @Test
     public void testGithubIssue_43() throws Exception {
         SourceMapGenerator map = new SourceMapGenerator("foo.js", "http://example.com");
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 2), new GeneratorPosition(1, 1), "http://cdn.example.com/original.js"));
+        map.addMapping(new Mapping(new Position(2, 2), new Position(1, 1), "http://cdn.example.com/original.js"));
         SourceMapConsumer map2 = SourceMapConsumer.create(map.toJSON());
 
         List<String> sources = map2.sources();
@@ -670,7 +668,7 @@ public class SourceMapConsumerTest {
     @Test
     public void testAbsolutePathButSameHostSources() throws Exception {
         SourceMapGenerator map = new SourceMapGenerator("foo.js", "http://example.com/foo/bar");
-        map.addMapping(new GeneratorMapping(new GeneratorPosition(2, 2), new GeneratorPosition(1, 1), "/original.js"));
+        map.addMapping(new Mapping(new Position(2, 2), new Position(1, 1), "/original.js"));
         SourceMapConsumer map2 = SourceMapConsumer.create(map.toJSON());
 
         List<String> sources = map2.sources();
@@ -683,7 +681,7 @@ public class SourceMapConsumerTest {
         // Make a deep copy of the indexedTestMap
         SourceMap misorderedIndexedTestMap = TestUtil.indexedTestMap;
 
-        misorderedIndexedTestMap.sections.get(0).offset = new Offset(2, 0);
+        misorderedIndexedTestMap.sections.get(0).offset = new Position(2, 0);
 
         try {
             SourceMapConsumer.create(misorderedIndexedTestMap);
@@ -734,7 +732,7 @@ public class SourceMapConsumerTest {
         sourceMap.sourceRoot = "http://example.com";
         SourceMapConsumer map = SourceMapConsumer.create(sourceMap);
 
-        OriginalMapping pos = map.originalPositionFor(2, 2, null);
+        OriginalPosition pos = map.originalPositionFor(2, 2, null);
         assertEquals(pos.source, "http://example.com/source1.js");
         assertEquals(pos.line.intValue(), 1);
         assertEquals(pos.column.intValue(), 1);
@@ -761,7 +759,7 @@ public class SourceMapConsumerTest {
         sourceMap.sourceRoot = "http://example.com";
         SourceMapConsumer map = SourceMapConsumer.create(sourceMap);
 
-        OriginalMapping pos = map.originalPositionFor(2, 2, null);
+        OriginalPosition pos = map.originalPositionFor(2, 2, null);
         assertEquals(pos.name, "name1");
         assertEquals(pos.line.intValue(), 1);
         assertEquals(pos.column.intValue(), 1);
@@ -780,8 +778,8 @@ public class SourceMapConsumerTest {
     @Test
     public void testSourceMapConsumer_fromSourceMap() throws Exception {
         SourceMapGenerator smg = new SourceMapGenerator("foo.js", "http://example.com/");
-        smg.addMapping(new GeneratorMapping(new GeneratorPosition(2, 2), new GeneratorPosition(1, 1), "bar.js"));
-        smg.addMapping(new GeneratorMapping(new GeneratorPosition(4, 4), new GeneratorPosition(2, 2), "baz.js", "dirtMcGirt"));
+        smg.addMapping(new Mapping(new Position(2, 2), new Position(1, 1), "bar.js"));
+        smg.addMapping(new Mapping(new Position(4, 4), new Position(2, 2), "baz.js", "dirtMcGirt"));
         smg.setSourceContent("baz.js", "baz.js content");
 
         SourceMapConsumer smc = SourceMapConsumer.fromSourceMap(smg);
@@ -792,13 +790,13 @@ public class SourceMapConsumerTest {
         assertEquals(smc.sources().get(1), "http://example.com/baz.js");
         assertEquals(smc.sourceContentFor("baz.js"), "baz.js content");
 
-        OriginalMapping pos = smc.originalPositionFor(2, 2, null);
+        OriginalPosition pos = smc.originalPositionFor(2, 2, null);
         assertEquals(pos.line.intValue(), 1);
         assertEquals(pos.column.intValue(), 1);
         assertEquals(pos.source, "http://example.com/bar.js");
         assertNull(pos.name);
 
-        Position pos2 = smc.generatedPositionFor("http://example.com/bar.js", 1, 1, null);
+        GeneratedPosition pos2 = smc.generatedPositionFor("http://example.com/bar.js", 1, 1, null);
         assertEquals(pos2.line.intValue(), 2);
         assertEquals(pos2.column.intValue(), 2);
 
@@ -816,7 +814,7 @@ public class SourceMapConsumerTest {
     @Test
     public void testIssue_191() throws Exception {
         SourceMapGenerator generator = new SourceMapGenerator("a.css", null);
-        generator.addMapping(new GeneratorMapping(new GeneratorPosition(1, 0), new GeneratorPosition(1, 0), "b.css"));
+        generator.addMapping(new Mapping(new Position(1, 0), new Position(1, 0), "b.css"));
 
         // Create a SourceMapConsumer from the SourceMapGenerator, ...
         SourceMapConsumer.fromSourceMap(generator);

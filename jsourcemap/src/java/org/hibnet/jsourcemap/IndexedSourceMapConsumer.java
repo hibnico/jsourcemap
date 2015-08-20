@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.hibnet.jsourcemap.BinarySearch.Bias;
-import org.hibnet.jsourcemap.Section.Offset;
 
 /**
  * An IndexedSourceMapConsumer instance represents a parsed source map which we can query for information. It differs from BasicSourceMapConsumer in
@@ -64,23 +63,23 @@ import org.hibnet.jsourcemap.Section.Offset;
  * 
  * [0]: https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit#heading=h.535es3xeprgt
  */
-public class IndexedSourceMapConsumer extends SourceMapConsumer {
+class IndexedSourceMapConsumer extends SourceMapConsumer {
 
-    public static class ParsedOffset {
+    static class ParsedOffset {
         int generatedLine;
         int generatedColumn;
 
-        public ParsedOffset(int generatedLine, int generatedColumn) {
+        ParsedOffset(int generatedLine, int generatedColumn) {
             this.generatedLine = generatedLine;
             this.generatedColumn = generatedColumn;
         }
     }
 
-    public static class ParsedSection {
+    static class ParsedSection {
         ParsedOffset generatedOffset;
         SourceMapConsumer consumer;
 
-        public ParsedSection(ParsedOffset generatedOffset, SourceMapConsumer consumer) {
+        ParsedSection(ParsedOffset generatedOffset, SourceMapConsumer consumer) {
             this.generatedOffset = generatedOffset;
             this.consumer = consumer;
         }
@@ -88,15 +87,7 @@ public class IndexedSourceMapConsumer extends SourceMapConsumer {
 
     private List<ParsedSection> _sections;
 
-    public IndexedSourceMapConsumer(Object aSourceMap) {
-        SourceMap sourceMap;
-        if (aSourceMap instanceof String) {
-            sourceMap = new SourceMap(((String) aSourceMap).replaceAll("^\\)\\]\\}'", ""));
-        } else if (aSourceMap instanceof SourceMap) {
-            sourceMap = (SourceMap) aSourceMap;
-        } else {
-            throw new IllegalArgumentException();
-        }
+    IndexedSourceMapConsumer(SourceMap sourceMap) {
         int version = sourceMap.version;
         List<Section> sections = sourceMap.sections;
 
@@ -107,15 +98,15 @@ public class IndexedSourceMapConsumer extends SourceMapConsumer {
         this._sources = new ArraySet<>();
         this._names = new ArraySet<>();
 
-        final Offset[] lastOffset = new Offset[1];
-        lastOffset[0] = new Offset(-1, 0);
+        final Position[] lastOffset = new Position[1];
+        lastOffset[0] = new Position(-1, 0);
         this._sections = sections.stream().map(s -> {
             if (s.url != null) {
                 // The url field will require support for asynchronicity.
                 // See https://github.com/mozilla/source-map/issues/16
                 throw new RuntimeException("Support for url field in sections not implemented.");
             }
-            Offset offset = s.offset;
+            Position offset = s.offset;
             int offsetLine = offset.line;
             int offsetColumn = offset.column;
 
@@ -137,7 +128,7 @@ public class IndexedSourceMapConsumer extends SourceMapConsumer {
      * The list of original sources.
      */
     @Override
-    protected List<String> sources() {
+    public List<String> sources() {
         List<String> sources = new ArrayList<>();
         for (int i = 0; i < this._sections.size(); i++) {
             for (int j = 0; j < this._sections.get(i).consumer.sources().size(); j++) {
@@ -162,7 +153,7 @@ public class IndexedSourceMapConsumer extends SourceMapConsumer {
      * <li>name: The original identifier, or null.</li>
      * </ul>
      */
-    public OriginalMapping originalPositionFor(int line, int column, Bias bias) {
+    public OriginalPosition originalPositionFor(int line, int column, Bias bias) {
         ParsedSection needle = new ParsedSection(new ParsedOffset(line, column), null);
 
         // Find the section containing the generated position we're trying to map
@@ -178,7 +169,7 @@ public class IndexedSourceMapConsumer extends SourceMapConsumer {
         ParsedSection section = this._sections.get(sectionIndex);
 
         if (section == null) {
-            return new OriginalMapping();
+            return new OriginalPosition();
         }
 
         return section.consumer.originalPositionFor(needle.generatedOffset.generatedLine - (section.generatedOffset.generatedLine - 1),
@@ -191,7 +182,7 @@ public class IndexedSourceMapConsumer extends SourceMapConsumer {
      * Return true if we have the source content for every source in the source map, false otherwise.
      */
     @Override
-    boolean hasContentsOfAllSources() {
+    public boolean hasContentsOfAllSources() {
         return this._sections.stream().allMatch(s -> s.consumer.hasContentsOfAllSources());
     }
 
@@ -230,7 +221,7 @@ public class IndexedSourceMapConsumer extends SourceMapConsumer {
      * </ul>
      */
     @Override
-    Position generatedPositionFor(String source, int line, int column, Bias bias) {
+    public GeneratedPosition generatedPositionFor(String source, int line, int column, Bias bias) {
         for (int i = 0; i < this._sections.size(); i++) {
             ParsedSection section = this._sections.get(i);
 
@@ -239,9 +230,9 @@ public class IndexedSourceMapConsumer extends SourceMapConsumer {
             if (section.consumer.sources().indexOf(source) == -1) {
                 continue;
             }
-            Position generatedPosition = section.consumer.generatedPositionFor(source, line, column, bias);
+            GeneratedPosition generatedPosition = section.consumer.generatedPositionFor(source, line, column, bias);
             if (generatedPosition != null) {
-                Position ret = new Position(generatedPosition.line + (section.generatedOffset.generatedLine - 1),
+                GeneratedPosition ret = new GeneratedPosition(generatedPosition.line + (section.generatedOffset.generatedLine - 1),
                         generatedPosition.column
                                 + (section.generatedOffset.generatedLine == generatedPosition.line ? section.generatedOffset.generatedColumn - 1 : 0),
                         null);
@@ -249,7 +240,7 @@ public class IndexedSourceMapConsumer extends SourceMapConsumer {
             }
         }
 
-        return new Position();
+        return new GeneratedPosition();
     }
 
     /**
@@ -262,9 +253,9 @@ public class IndexedSourceMapConsumer extends SourceMapConsumer {
         this.__originalMappings = new ArrayList<>();
         for (int i = 0; i < this._sections.size(); i++) {
             ParsedSection section = this._sections.get(i);
-            List<ConsumerMapping> sectionMappings = section.consumer._generatedMappings();
+            List<ParsedMapping> sectionMappings = section.consumer._generatedMappings();
             for (int j = 0; j < sectionMappings.size(); j++) {
-                ConsumerMapping mapping = sectionMappings.get(j);
+                ParsedMapping mapping = sectionMappings.get(j);
 
                 String source = section.consumer._sources.at(mapping.source);
                 if (section.consumer.sourceRoot != null) {
@@ -281,7 +272,7 @@ public class IndexedSourceMapConsumer extends SourceMapConsumer {
                 // generated positions relative to the start of the section, so we
                 // need to offset them to be relative to the start of the concatenated
                 // generated file.
-                ConsumerMapping adjustedMapping = new ConsumerMapping(mapping.generatedLine + (section.generatedOffset.generatedLine - 1),
+                ParsedMapping adjustedMapping = new ParsedMapping(mapping.generatedLine + (section.generatedOffset.generatedLine - 1),
                         mapping.generatedColumn + ((section.generatedOffset.generatedLine == mapping.generatedLine)
                                 ? section.generatedOffset.generatedColumn - 1 : 0),
                         mapping.originalLine, mapping.originalColumn, source_, name_);

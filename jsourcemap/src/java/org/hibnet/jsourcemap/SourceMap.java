@@ -18,20 +18,20 @@ package org.hibnet.jsourcemap;
 import java.util.List;
 
 public class SourceMap {
-    public SourceMap() {
-        // TODO Auto-generated constructor stub
-    }
 
-    public SourceMap(String json) {
-        // TODO Auto-generated constructor stub
-    }
+    public int version;
 
-    int version;
-    List<String> sources;
-    List<String> names;
-    String mappings;
-    String file;
-    String sourceRoot;
-    List<String> sourcesContent;
-    List<Section> sections;
+    public List<String> sources;
+
+    public List<String> names;
+
+    public String mappings;
+
+    public String file;
+
+    public String sourceRoot;
+
+    public List<String> sourcesContent;
+
+    public List<Section> sections;
 }

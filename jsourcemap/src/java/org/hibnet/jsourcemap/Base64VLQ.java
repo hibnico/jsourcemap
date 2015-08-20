@@ -15,7 +15,7 @@
  */
 package org.hibnet.jsourcemap;
 
-public class Base64VLQ {
+class Base64VLQ {
 
     // A single base 64 digit can contain 6 bits of data. For the base 64 variable
     // length quantities we use in the source map spec, the first bit is the sign,
@@ -61,7 +61,7 @@ public class Base64VLQ {
     /**
      * Returns the base 64 VLQ encoded value.
      */
-    public static final String encode(int aValue) {
+    static final String encode(int aValue) {
         String encoded = "";
         int digit;
 
@@ -86,7 +86,7 @@ public class Base64VLQ {
      * 
      * @return
      */
-    public static Base64VLQResult decode(String aStr, int aIndex) {
+    static Base64VLQResult decode(String aStr, int aIndex) {
         int strLen = aStr.length();
         int result = 0;
         int shift = 0;
@@ -112,9 +112,9 @@ public class Base64VLQ {
         return new Base64VLQResult(fromVLQSigned(result), aIndex);
     }
 
-    public static final class Base64VLQResult {
-        public int value;
-        public int rest;
+    static final class Base64VLQResult {
+        int value;
+        int rest;
 
         Base64VLQResult(int value, int rest) {
             this.value = value;

@@ -22,8 +22,6 @@ import java.util.stream.Collectors;
 
 public class SourceMapGenerator {
 
-    private static final int VERSION = 3;
-
     String _file;
     String _sourceRoot;
     ArraySet<String> _sources;
@@ -48,6 +46,8 @@ public class SourceMapGenerator {
         this._sourcesContents = null;
     }
 
+    private int _version = 3;
+
     /**
      * Creates a new SourceMapGenerator based on a SourceMapConsumer
      *
@@ -58,13 +58,13 @@ public class SourceMapGenerator {
         String sourceRoot = aSourceMapConsumer.sourceRoot;
         SourceMapGenerator generator = new SourceMapGenerator(aSourceMapConsumer.file, sourceRoot);
         aSourceMapConsumer.eachMapping().forEach(mapping -> {
-            GeneratorMapping newMapping = new GeneratorMapping(new GeneratorPosition(mapping.generatedLine, mapping.generatedColumn));
+            Mapping newMapping = new Mapping(mapping.generated);
             if (mapping.source != null) {
                 newMapping.source = mapping.source;
                 if (sourceRoot != null) {
                     newMapping.source = Util.relative(sourceRoot, newMapping.source);
                 }
-                newMapping.original = new GeneratorPosition(mapping.originalLine, mapping.originalColumn);
+                newMapping.original = mapping.original;
                 if (mapping.name != null) {
                     newMapping.name = mapping.name;
                 }
@@ -90,9 +90,9 @@ public class SourceMapGenerator {
      * <li>name: An optional original token name for this mapping.</li>
      * </ul>
      */
-    void addMapping(GeneratorMapping aArgs) {
-        GeneratorPosition generated = aArgs.generated;
-        GeneratorPosition original = aArgs.original;
+    public void addMapping(Mapping aArgs) {
+        Position generated = aArgs.generated;
+        Position original = aArgs.original;
         String source = aArgs.source;
         String name = aArgs.name;
 
@@ -102,14 +102,13 @@ public class SourceMapGenerator {
         if (name != null && !this._names.has(name)) {
             _names.add(name, false);
         }
-        _mappings.add(new Mapping(generated.line, generated.column, original != null ? original.line : null,
-                original != null ? original.column : null, source, name));
+        _mappings.add(new Mapping(generated, original, source, name));
     }
 
     /**
      * Set the source content for a source file.
      */
-    void setSourceContent(String aSourceFile, String aSourceContent) {
+    public void setSourceContent(String aSourceFile, String aSourceContent) {
         String source = aSourceFile;
         if (this._sourceRoot != null) {
             source = Util.relative(this._sourceRoot, source);
@@ -168,9 +167,9 @@ public class SourceMapGenerator {
         final String f_sourceFile = sourceFile;
         // Find mappings for the "sourceFile"
         this._mappings.unsortedForEach().forEach(mapping -> {
-            if (mapping.source.equals(f_sourceFile) && mapping.originalLine != null) {
+            if (mapping.source.equals(f_sourceFile) && mapping.original != null) {
                 // Check if it can be mapped by the source map, then update the mapping.
-                OriginalMapping original = aSourceMapConsumer.originalPositionFor(mapping.originalLine, mapping.originalColumn, null);
+                OriginalPosition original = aSourceMapConsumer.originalPositionFor(mapping.original.line, mapping.original.column, null);
                 if (original.source != null) {
                     // Copy mapping
                     mapping.source = original.source;
@@ -180,8 +179,8 @@ public class SourceMapGenerator {
                     if (sourceRoot != null) {
                         mapping.source = Util.relative(sourceRoot, mapping.source);
                     }
-                    mapping.originalLine = original.line;
-                    mapping.originalColumn = original.column;
+                    mapping.original.line = original.line;
+                    mapping.original.column = original.column;
                     if (original.name != null) {
                         mapping.name = original.name;
                     }
@@ -232,9 +231,9 @@ public class SourceMapGenerator {
         List<Mapping> mappings = this._mappings.toArray();
         for (int i = 0, len = mappings.size(); i < len; i++) {
             mapping = mappings.get(i);
-            if (mapping.generatedLine != previousGeneratedLine) {
+            if (mapping.generated.line != previousGeneratedLine) {
                 previousGeneratedColumn = 0;
-                while (mapping.generatedLine != previousGeneratedLine) {
+                while (mapping.generated.line != previousGeneratedLine) {
                     result += ';';
                     previousGeneratedLine++;
                 }
@@ -247,19 +246,19 @@ public class SourceMapGenerator {
                 }
             }
 
-            result += Base64VLQ.encode(mapping.generatedColumn - previousGeneratedColumn);
-            previousGeneratedColumn = mapping.generatedColumn;
+            result += Base64VLQ.encode(mapping.generated.column - previousGeneratedColumn);
+            previousGeneratedColumn = mapping.generated.column;
 
             if (mapping.source != null) {
                 result += Base64VLQ.encode(this._sources.indexOf(mapping.source) - previousSource);
                 previousSource = this._sources.indexOf(mapping.source);
 
                 // lines are stored 0-based in SourceMap spec version 3
-                result += Base64VLQ.encode(mapping.originalLine - 1 - previousOriginalLine);
-                previousOriginalLine = mapping.originalLine - 1;
+                result += Base64VLQ.encode(mapping.original.line - 1 - previousOriginalLine);
+                previousOriginalLine = mapping.original.line - 1;
 
-                result += Base64VLQ.encode(mapping.originalColumn - previousOriginalColumn);
-                previousOriginalColumn = mapping.originalColumn;
+                result += Base64VLQ.encode(mapping.original.column - previousOriginalColumn);
+                previousOriginalColumn = mapping.original.column;
 
                 if (mapping.name != null) {
                     result += Base64VLQ.encode(this._names.indexOf(mapping.name) - previousName);
@@ -287,9 +286,9 @@ public class SourceMapGenerator {
     /**
      * Externalize the source map.
      */
-    SourceMap toJSON() {
+    public SourceMap toJSON() {
         SourceMap map = new SourceMap();
-        map.version = VERSION;
+        map.version = this._version;
         map.sources = this._sources.toArray();
         map.names = this._names.toArray();
         map.mappings = serializeMappings();
@@ -301,12 +300,4 @@ public class SourceMapGenerator {
         return map;
     }
 
-    /**
-     * Render the source map being generated to a string.
-     */
-
-    @Override
-    public String toString() {
-        return toJSON().toString();
-    }
 }

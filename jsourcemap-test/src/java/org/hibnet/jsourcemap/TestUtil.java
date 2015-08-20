@@ -19,8 +19,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
-import org.hibnet.jsourcemap.SourceMapConsumer.Position;
-
 import junit.framework.Assert;
 
 public class TestUtil {
@@ -85,7 +83,7 @@ public class TestUtil {
         indexedTestMap.file = "min.js";
         indexedTestMap.sections = new ArrayList<>();
         indexedTestMap.sections.add(new Section());
-        indexedTestMap.sections.get(0).offset = new Section.Offset(0, 0);
+        indexedTestMap.sections.get(0).offset = new Position(0, 0);
         indexedTestMap.sections.get(0).map = new SourceMap();
         indexedTestMap.sections.get(0).map.version = 3;
         indexedTestMap.sections.get(0).map.sources = Arrays.asList("one.js");
@@ -95,7 +93,7 @@ public class TestUtil {
         indexedTestMap.sections.get(0).map.file = "min.js";
         indexedTestMap.sections.get(0).map.sourceRoot = "/the/root";
         indexedTestMap.sections.add(new Section());
-        indexedTestMap.sections.get(1).offset = new Section.Offset(1, 0);
+        indexedTestMap.sections.get(1).offset = new Position(1, 0);
         indexedTestMap.sections.get(1).map = new SourceMap();
         indexedTestMap.sections.get(1).map.version = 3;
         indexedTestMap.sections.get(1).map.sources = Arrays.asList("two.js");
@@ -111,7 +109,7 @@ public class TestUtil {
         indexedTestMapDifferentSourceRoots.file = "min.js";
         indexedTestMapDifferentSourceRoots.sections = new ArrayList<>();
         indexedTestMapDifferentSourceRoots.sections.add(new Section());
-        indexedTestMapDifferentSourceRoots.sections.get(0).offset = new Section.Offset(0, 0);
+        indexedTestMapDifferentSourceRoots.sections.get(0).offset = new Position(0, 0);
         indexedTestMapDifferentSourceRoots.sections.get(0).map = new SourceMap();
         indexedTestMapDifferentSourceRoots.sections.get(0).map.version = 3;
         indexedTestMapDifferentSourceRoots.sections.get(0).map.sources = Arrays.asList("one.js");
@@ -122,7 +120,7 @@ public class TestUtil {
         indexedTestMapDifferentSourceRoots.sections.get(0).map.file = "min.js";
         indexedTestMapDifferentSourceRoots.sections.get(0).map.sourceRoot = "/the/root";
         indexedTestMapDifferentSourceRoots.sections.add(new Section());
-        indexedTestMapDifferentSourceRoots.sections.get(1).offset = new Section.Offset(1, 0);
+        indexedTestMapDifferentSourceRoots.sections.get(1).offset = new Position(1, 0);
         indexedTestMapDifferentSourceRoots.sections.get(1).map = new SourceMap();
         indexedTestMapDifferentSourceRoots.sections.get(1).map.version = 3;
         indexedTestMapDifferentSourceRoots.sections.get(1).map.sources = Arrays.asList("two.js");
@@ -175,7 +173,7 @@ public class TestUtil {
     static void assertMapping(Integer generatedLine, Integer generatedColumn, String originalSource, Integer originalLine, Integer originalColumn,
             String name, BinarySearch.Bias bias, SourceMapConsumer map, Boolean dontTestGenerated, Boolean dontTestOriginal) {
         if (dontTestOriginal == null || !dontTestOriginal) {
-            OriginalMapping origMapping = map.originalPositionFor(generatedLine, generatedColumn, bias);
+            OriginalPosition origMapping = map.originalPositionFor(generatedLine, generatedColumn, bias);
             assertEquals(origMapping.name, name, "Incorrect name, expected " + name + ", got " + origMapping.name);
             assertEquals(origMapping.line, originalLine, "Incorrect line, expected " + originalLine + ", got " + origMapping.line);
             assertEquals(origMapping.column, originalColumn, "Incorrect column, expected " + originalColumn + ", got " + origMapping.column);
@@ -194,7 +192,7 @@ public class TestUtil {
         }
 
         if (dontTestGenerated == null || !dontTestGenerated) {
-            Position genMapping = map.generatedPositionFor(originalSource, originalLine, originalColumn, bias);
+            GeneratedPosition genMapping = map.generatedPositionFor(originalSource, originalLine, originalColumn, bias);
             assertEquals(genMapping.line, generatedLine, "Incorrect line, expected " + generatedLine + ", got " + genMapping.line);
             assertEquals(genMapping.column, generatedColumn, "Incorrect column, expected " + generatedColumn + ", got " + genMapping.column);
         }

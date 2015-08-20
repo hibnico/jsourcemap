@@ -17,50 +17,41 @@ package org.hibnet.jsourcemap;
 
 public class Mapping {
 
-    public Integer generatedLine;
+    Position generated;
+    Position original;
+    String source;
+    String name;
 
-    public Integer generatedColumn;
-
-    public Integer originalLine;
-
-    public Integer originalColumn;
-
-    public String source;
-
-    public String name;
-
-    public Integer lastGeneratedColumn;
-
-    public Mapping() {
-        // TODO Auto-generated constructor stub
+    public Mapping(Position generated) {
+        this.generated = generated;
     }
 
-    public Mapping(int generatedLine, int generatedColumn) {
-        this.generatedLine = generatedLine;
-        this.generatedColumn = generatedColumn;
-    }
-
-    public Mapping(int generatedLine, int generatedColumn, int originalLine, int originalColumn, String source) {
-        this.generatedLine = generatedLine;
-        this.generatedColumn = generatedColumn;
-        this.originalLine = originalLine;
-        this.originalColumn = originalColumn;
+    public Mapping(Position generated, Position original, String source) {
+        this.generated = generated;
+        this.original = original;
         this.source = source;
     }
 
-    public Mapping(int generatedLine, int generatedColumn, Integer originalLine, Integer originalColumn, String source, String name) {
-        this.generatedLine = generatedLine;
-        this.generatedColumn = generatedColumn;
-        this.originalLine = originalLine;
-        this.originalColumn = originalColumn;
+    public Mapping(Position generated, Position original, String source, String name) {
+        this.generated = generated;
+        this.original = original;
         this.source = source;
         this.name = name;
     }
 
-    public Mapping(int generatedLine, int generatedColumn, int lastGeneratedColumn) {
-        this.generatedLine = generatedLine;
-        this.generatedColumn = generatedColumn;
-        this.lastGeneratedColumn = lastGeneratedColumn;
+    public Position getGenerated() {
+        return generated;
     }
 
+    public Position getOriginal() {
+        return original;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public String getName() {
+        return name;
+    }
 }

@@ -15,12 +15,26 @@
  */
 package org.hibnet.jsourcemap;
 
-public class GeneratorPosition {
-    int line;
-    int column;
+public class OriginalPosition extends Position {
 
-    public GeneratorPosition(int line, int column) {
-        this.line = line;
-        this.column = column;
+    String source;
+    String name;
+
+    OriginalPosition() {
+        super(null, null);// position not found
+    }
+
+    OriginalPosition(Integer line, Integer column, String source, String name) {
+        super(line, column);
+        this.source = source;
+        this.name = name;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public String getName() {
+        return name;
     }
 }

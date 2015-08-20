@@ -20,7 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class MappingList {
+class MappingList {
 
     private List<Mapping> _array;
     private boolean _sorted;
@@ -31,10 +31,10 @@ public class MappingList {
      */
     private boolean generatedPositionAfter(Mapping mappingA, Mapping mappingB) {
         // Optimized for most common case
-        int lineA = mappingA.generatedLine;
-        int lineB = mappingB.generatedLine;
-        int columnA = mappingA.generatedColumn;
-        int columnB = mappingB.generatedColumn;
+        int lineA = mappingA.generated.line;
+        int lineB = mappingB.generated.line;
+        int columnA = mappingA.generated.column;
+        int columnB = mappingB.generated.column;
         return lineB > lineA || lineB == lineA && columnB >= columnA || Util.compareByGeneratedPositionsInflated(mappingA, mappingB) <= 0;
     }
 
@@ -42,11 +42,11 @@ public class MappingList {
      * A data structure to provide a sorted view of accumulated mappings in a performance conscious manner. It trades a neglibable overhead in general
      * case for a large speedup in case of mappings being added in order.
      */
-    public MappingList() {
+    MappingList() {
         this._array = new ArrayList<>();
         this._sorted = true;
         // Serves as infimum
-        this._last = new Mapping(-1, 0);
+        this._last = new Mapping(new Position(-1, 0));
     }
 
     /**

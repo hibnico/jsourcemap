@@ -35,19 +35,61 @@ public abstract class SourceMapConsumer {
         generated, original
     }
 
-    static SourceMapConsumer create(Object aSourceMap) {
-        SourceMap sourceMap;
-        if (aSourceMap instanceof String) {
-            sourceMap = new SourceMap(((String) aSourceMap).replaceAll("^\\)\\]\\}'", ""));
-        } else if (aSourceMap instanceof SourceMap) {
-            sourceMap = (SourceMap) aSourceMap;
-        } else {
-            throw new IllegalArgumentException();
+    static class ParsedMapping {
+
+        Integer generatedLine;
+
+        Integer generatedColumn;
+
+        Integer originalLine;
+
+        Integer originalColumn;
+
+        Integer source;
+
+        Integer name;
+
+        Integer lastGeneratedColumn;
+
+        ParsedMapping() {
+            // TODO Auto-generated constructor stub
         }
+
+        ParsedMapping(Integer generatedLine, Integer generatedColumn) {
+            this.generatedLine = generatedLine;
+            this.generatedColumn = generatedColumn;
+        }
+
+        ParsedMapping(Integer generatedLine, Integer generatedColumn, Integer originalLine, Integer originalColumn, Integer source) {
+            this.generatedLine = generatedLine;
+            this.generatedColumn = generatedColumn;
+            this.originalLine = originalLine;
+            this.originalColumn = originalColumn;
+            this.source = source;
+        }
+
+        ParsedMapping(Integer generatedLine, Integer generatedColumn, Integer originalLine, Integer originalColumn, Integer source, Integer name) {
+            this.generatedLine = generatedLine;
+            this.generatedColumn = generatedColumn;
+            this.originalLine = originalLine;
+            this.originalColumn = originalColumn;
+            this.source = source;
+            this.name = name;
+        }
+
+        ParsedMapping(Integer generatedLine, Integer generatedColumn, Integer lastGeneratedColumn) {
+            this.generatedLine = generatedLine;
+            this.generatedColumn = generatedColumn;
+            this.lastGeneratedColumn = lastGeneratedColumn;
+        }
+
+    }
+
+    public static SourceMapConsumer create(SourceMap sourceMap) {
         return sourceMap.sections != null ? new IndexedSourceMapConsumer(sourceMap) : new BasicSourceMapConsumer(sourceMap);
     }
 
-    static SourceMapConsumer fromSourceMap(SourceMapGenerator aSourceMap) {
+    public static SourceMapConsumer fromSourceMap(SourceMapGenerator aSourceMap) {
         return BasicSourceMapConsumer.fromSourceMap(aSourceMap);
     }
 
@@ -86,18 +128,18 @@ public abstract class SourceMapConsumer {
     //
     // `_originalMappings` is ordered by the original positions.
 
-    List<ConsumerMapping> __generatedMappings = null;
+    List<ParsedMapping> __generatedMappings = null;
 
-    List<ConsumerMapping> _generatedMappings() {
+    List<ParsedMapping> _generatedMappings() {
         if (this.__generatedMappings == null) {
             this._parseMappings(this._mappings, this.sourceRoot);
         }
         return this.__generatedMappings;
     }
 
-    List<ConsumerMapping> __originalMappings = null;
+    List<ParsedMapping> __originalMappings = null;
 
-    List<ConsumerMapping> _originalMappings() {
+    List<ParsedMapping> _originalMappings() {
         if (this.__originalMappings == null) {
             this._parseMappings(this._mappings, this.sourceRoot);
         }
@@ -115,19 +157,19 @@ public abstract class SourceMapConsumer {
      */
     abstract void _parseMappings(String aStr, String aSourceRoot);
 
-    abstract List<String> sources();
+    public abstract List<String> sources();
 
-    String sourceContentFor(String aSource) {
+    public String sourceContentFor(String aSource) {
         return sourceContentFor(aSource, null);
     }
 
     abstract String sourceContentFor(String aSource, Boolean nullOnMissing);
 
-    abstract OriginalMapping originalPositionFor(int line, int column, Bias bias);
+    public abstract OriginalPosition originalPositionFor(int line, int column, Bias bias);
 
-    abstract boolean hasContentsOfAllSources();
+    public abstract boolean hasContentsOfAllSources();
 
-    abstract Position generatedPositionFor(String source, int line, int column, Bias bias);
+    public abstract GeneratedPosition generatedPositionFor(String source, int line, int column, Bias bias);
 
     /**
      * Iterate over each mapping between an original source/line/column and a generated line/column in this source map.
@@ -141,7 +183,7 @@ public abstract class SourceMapConsumer {
      *            mappings sorted by the generated file's line/column order or the original's source/line/column order, respectively. Defaults to
      *            `SourceMapConsumer.GENERATED_ORDER`.
      */
-    Stream<Mapping> eachMapping() {
+    public Stream<Mapping> eachMapping() {
         return eachMapping(null);
     }
 
@@ -150,7 +192,7 @@ public abstract class SourceMapConsumer {
             aOrder = Order.generated;
         }
 
-        List<ConsumerMapping> mappings;
+        List<ParsedMapping> mappings;
         switch (aOrder) {
         case generated:
             mappings = _generatedMappings();
@@ -168,33 +210,10 @@ public abstract class SourceMapConsumer {
             if (source != null && sourceRoot != null) {
                 source = Util.join(sourceRoot, source);
             }
-            return new Mapping(mapping.generatedLine, mapping.generatedColumn, mapping.originalLine, mapping.originalColumn, source,
+            return new Mapping(new Position(mapping.generatedLine, mapping.generatedColumn),
+                    new Position(mapping.originalLine, mapping.originalColumn), source,
                     mapping.name == null ? null : this._names.at(mapping.name));
         });
-    }
-
-    static class Position {
-        Integer line;
-        Integer column;
-        Integer lastColumn;
-
-        public Position() {
-            // TODO Auto-generated constructor stub
-        }
-
-        public Position(Integer line, Integer column, Integer lastColumn) {
-            this.line = line;
-            this.column = column;
-            this.lastColumn = lastColumn;
-        }
-
-        public Position(ConsumerMapping mapping) {
-            if (mapping.generatedLine != null) {
-                line = mapping.generatedLine;
-                column = mapping.generatedColumn;
-            }
-            lastColumn = mapping.lastGeneratedColumn;
-        }
     }
 
     /**
@@ -214,12 +233,12 @@ public abstract class SourceMapConsumer {
      * <li>column: The column number in the generated source, or null.</li>
      * </ul>
      */
-    List<Position> allGeneratedPositionsFor(int line, Integer column, String source) {
+    public List<GeneratedPosition> allGeneratedPositionsFor(int line, Integer column, String source) {
         // When there is no exact match, BasicSourceMapConsumer.prototype._findMapping
         // returns the index of the closest mapping less than the needle. By
         // setting needle.originalColumn to 0, we thus find the last mapping for
         // the given line, provided such a mapping exists.
-        ConsumerMapping needle = new ConsumerMapping(null, null, line, column == null ? 0 : column, null, null);
+        ParsedMapping needle = new ParsedMapping(null, null, line, column == null ? 0 : column, null, null);
 
         if (this.sourceRoot != null) {
             source = Util.relative(this.sourceRoot, source);
@@ -229,12 +248,12 @@ public abstract class SourceMapConsumer {
         }
         needle.source = this._sources.indexOf(source);
 
-        List<Position> mappings = new ArrayList<>();
+        List<GeneratedPosition> mappings = new ArrayList<>();
 
         int index = _findMapping(needle, this._originalMappings(), "originalLine", "originalColumn",
                 (mapping1, mapping2) -> Util.compareByOriginalPositions(mapping1, mapping2, true), BinarySearch.Bias.LEAST_UPPER_BOUND);
         if (index >= 0) {
-            ConsumerMapping mapping = this._originalMappings().get(index);
+            ParsedMapping mapping = this._originalMappings().get(index);
 
             if (column == null) {
                 int originalLine = mapping.originalLine;
@@ -244,7 +263,7 @@ public abstract class SourceMapConsumer {
                 // mappings are sorted, this is guaranteed to find all mappings for
                 // the line we found.
                 while (mapping != null && mapping.originalLine == originalLine) {
-                    mappings.add(new Position(mapping));
+                    mappings.add(new GeneratedPosition(mapping.generatedLine, mapping.generatedColumn, mapping.lastGeneratedColumn));
                     index++;
                     if (index >= this._originalMappings().size()) {
                         mapping = null;
@@ -260,7 +279,7 @@ public abstract class SourceMapConsumer {
                 // Since mappings are sorted, this is guaranteed to find all mappings for
                 // the line we are searching for.
                 while (mapping != null && mapping.originalLine == line && mapping.originalColumn == originalColumn) {
-                    mappings.add(new Position(mapping));
+                    mappings.add(new GeneratedPosition(mapping.generatedLine, mapping.generatedColumn, mapping.lastGeneratedColumn));
                     index++;
                     if (index >= this._originalMappings().size()) {
                         mapping = null;

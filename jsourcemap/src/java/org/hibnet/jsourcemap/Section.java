@@ -17,19 +17,10 @@ package org.hibnet.jsourcemap;
 
 public class Section {
 
-    public static class Offset {
-        int line;
-        int column;
+    public String url;
 
-        public Offset(int line, int column) {
-            this.line = line;
-            this.column = column;
-        }
-    }
+    public Position offset;
 
-    String url;
+    public SourceMap map;
 
-    Offset offset;
-
-    SourceMap map;
 }

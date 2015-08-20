@@ -15,7 +15,7 @@
  */
 package org.hibnet.jsourcemap;
 
-public class Base64 {
+class Base64 {
 
     private static String intToCharMap = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 

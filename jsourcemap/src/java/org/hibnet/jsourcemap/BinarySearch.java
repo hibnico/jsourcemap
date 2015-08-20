@@ -17,7 +17,7 @@ package org.hibnet.jsourcemap;
 
 import java.util.List;
 
-public class BinarySearch {
+class BinarySearch {
 
     enum Bias {
         GREATEST_LOWER_BOUND, LEAST_UPPER_BOUND
@@ -25,7 +25,7 @@ public class BinarySearch {
 
     static interface Comparator<T> {
 
-        public int compare(T needle, T element);
+        int compare(T needle, T element);
 
     }
 
@@ -74,7 +74,7 @@ public class BinarySearch {
         }
     }
 
-    public static <T> int search(T aNeedle, List<T> aHaystack, Comparator<T> aCompare, Bias aBias) {
+    static <T> int search(T aNeedle, List<T> aHaystack, Comparator<T> aCompare, Bias aBias) {
         if (aHaystack.size() == 0) {
             return -1;
         }

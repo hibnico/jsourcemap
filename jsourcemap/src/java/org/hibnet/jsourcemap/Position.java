@@ -15,21 +15,15 @@
  */
 package org.hibnet.jsourcemap;
 
-public class OriginalMapping {
+public class Position {
 
-    Integer line;
-    Integer column;
-    String source;
-    String name;
+    public Integer line;
 
-    public OriginalMapping() {
-        // TODO Auto-generated constructor stub
-    }
+    public Integer column;
 
-    public OriginalMapping(Integer line, Integer column, String source, String name) {
+    public Position(Integer line, Integer column) {
         this.line = line;
         this.column = column;
-        this.source = source;
-        this.name = name;
     }
+
 }

@@ -20,7 +20,9 @@ import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Util {
+import org.hibnet.jsourcemap.SourceMapConsumer.ParsedMapping;
+
+class Util {
 
     private static final Pattern urlRegexp = Pattern.compile("^(?:([\\w+\\-.]+):)?//(?:(\\w+:\\w+)@)?([\\w.]*)(?::(\\d+))?(\\S*)$");
 
@@ -228,11 +230,11 @@ public class Util {
         return i1 - i2;
     }
 
-    static int compareByOriginalPositions(ConsumerMapping mappingA, ConsumerMapping mappingB) {
+    static int compareByOriginalPositions(ParsedMapping mappingA, ParsedMapping mappingB) {
         return compareByOriginalPositions(mappingA, mappingB, null);
     }
 
-    static int compareByOriginalPositions(ConsumerMapping mappingA, ConsumerMapping mappingB, Boolean onlyCompareOriginal) {
+    static int compareByOriginalPositions(ParsedMapping mappingA, ParsedMapping mappingB, Boolean onlyCompareOriginal) {
         int cmp = intcmp(mappingA.source, mappingB.source);
         if (cmp != 0) {
             return cmp;
@@ -261,11 +263,11 @@ public class Util {
         return intcmp(mappingA.name, mappingB.name);
     }
 
-    static int compareByGeneratedPositionsDeflated(ConsumerMapping mappingA, ConsumerMapping mappingB) {
+    static int compareByGeneratedPositionsDeflated(ParsedMapping mappingA, ParsedMapping mappingB) {
         return compareByGeneratedPositionsDeflated(mappingA, mappingB, null);
     }
 
-    static int compareByGeneratedPositionsDeflated(ConsumerMapping mappingA, ConsumerMapping mappingB, Boolean onlyCompareGenerated) {
+    static int compareByGeneratedPositionsDeflated(ParsedMapping mappingA, ParsedMapping mappingB, Boolean onlyCompareGenerated) {
         int cmp = intcmp(mappingA.generatedLine, mappingB.generatedLine);
         if (cmp != 0) {
             return cmp;
@@ -305,12 +307,12 @@ public class Util {
     }
 
     static final int compareByGeneratedPositionsInflated(Mapping mappingA, Mapping mappingB) {
-        int cmp = intcmp(mappingA.generatedLine, mappingB.generatedLine);
+        int cmp = intcmp(mappingA.generated.line, mappingB.generated.line);
         if (cmp != 0) {
             return cmp;
         }
 
-        cmp = intcmp(mappingA.generatedColumn, mappingB.generatedColumn);
+        cmp = intcmp(mappingA.generated.column, mappingB.generated.column);
         if (cmp != 0) {
             return cmp;
         }
@@ -320,12 +322,12 @@ public class Util {
             return cmp;
         }
 
-        cmp = intcmp(mappingA.originalLine, mappingB.originalLine);
+        cmp = intcmp(mappingA.original == null ? null : mappingA.original.line, mappingB.original == null ? null : mappingB.original.line);
         if (cmp != 0) {
             return cmp;
         }
 
-        cmp = intcmp(mappingA.originalColumn, mappingB.originalColumn);
+        cmp = intcmp(mappingA.original == null ? null : mappingA.original.column, mappingB.original == null ? null : mappingB.original.column);
         if (cmp != 0) {
             return cmp;
         }

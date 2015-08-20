@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ArraySet<T> {
+class ArraySet<T> {
 
     private Map<T, Integer> _set;
     private List<T> _array;
@@ -29,7 +29,7 @@ public class ArraySet<T> {
      * A data structure which is a combination of an array and a set. Adding a new member is O(1), testing for membership is O(1), and finding the
      * index of an element is O(1). Removing elements from the set is not supported. Only strings are supported for membership.
      */
-    public ArraySet() {
+    ArraySet() {
         _set = new HashMap<>();
         _array = new ArrayList<>();
     }
@@ -37,7 +37,7 @@ public class ArraySet<T> {
     /**
      * Static method for creating ArraySet instances from an existing array.
      */
-    public static <T> ArraySet<T> fromArray(List<T> aArray, Boolean aAllowDuplicates) {
+    static <T> ArraySet<T> fromArray(List<T> aArray, Boolean aAllowDuplicates) {
         ArraySet<T> set = new ArraySet<>();
         for (int i = 0, len = aArray.size(); i < len; i++) {
             set.add(aArray.get(i), aAllowDuplicates);
@@ -50,7 +50,7 @@ public class ArraySet<T> {
      *
      * @returns Number
      */
-    public int size() {
+    int size() {
         return _array.size();
     }
 
@@ -60,11 +60,11 @@ public class ArraySet<T> {
      * @param String
      *            aStr
      */
-    public void add(T t) {
+    void add(T t) {
         add(t, null);
     }
 
-    public void add(T t, Boolean aAllowDuplicates) {
+    void add(T t, Boolean aAllowDuplicates) {
         if (t == null) {
             return;
         }
@@ -84,7 +84,7 @@ public class ArraySet<T> {
      * @param String
      *            aStr
      */
-    public boolean has(T t) {
+    boolean has(T t) {
         if (t == null) {
             return false;
         }
@@ -97,7 +97,7 @@ public class ArraySet<T> {
      * @param String
      *            aStr
      */
-    public Integer indexOf(T t) {
+    Integer indexOf(T t) {
         if (t == null) {
             return null;
         }
@@ -114,7 +114,7 @@ public class ArraySet<T> {
      * @param Number
      *            aIdx
      */
-    public T at(Integer i) {
+    T at(Integer i) {
         if (i == null) {
             return null;
         }
@@ -125,7 +125,7 @@ public class ArraySet<T> {
      * Returns the array representation of this set (which has the proper indices indicated by indexOf). Note that this is a copy of the internal
      * array used for storing the members so that no one can mess with internal state.
      */
-    public List<T> toArray() {
+    List<T> toArray() {
         return new ArrayList<>(_array);
     }
 }
