@@ -3,7 +3,7 @@ JSourceMap
 
 JSourceMap is a library to parse and generate SourceMaps.
 
-The code and the API is an (almost) direct transposition of the Javascript library developped by Mozilla (https://github.com/mozilla/source-map/). The current code is up to date to the commit #14bc7933870ab0d28d171093c9fa73f96570abd7.
+The code and the API is an (almost) direct transposition of the Javascript library developped by Mozilla (https://github.com/mozilla/source-map/). The current code is up to date to the commit #d55e947a5845c94a8781bc82b456d1f362ce98b2.
 
 # Installation
 

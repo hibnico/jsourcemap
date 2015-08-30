@@ -227,6 +227,8 @@ public class SourceMapGenerator {
         int previousSource = 0;
         String result = "";
         Mapping mapping;
+        int nameIdx;
+        int sourceIdx;
 
         List<Mapping> mappings = this._mappings.toArray();
         for (int i = 0, len = mappings.size(); i < len; i++) {
@@ -250,8 +252,9 @@ public class SourceMapGenerator {
             previousGeneratedColumn = mapping.generated.column;
 
             if (mapping.source != null) {
-                result += Base64VLQ.encode(this._sources.indexOf(mapping.source) - previousSource);
-                previousSource = this._sources.indexOf(mapping.source);
+                sourceIdx = this._sources.indexOf(mapping.source);
+                result += Base64VLQ.encode(sourceIdx - previousSource);
+                previousSource = sourceIdx;
 
                 // lines are stored 0-based in SourceMap spec version 3
                 result += Base64VLQ.encode(mapping.original.line - 1 - previousOriginalLine);
@@ -261,8 +264,9 @@ public class SourceMapGenerator {
                 previousOriginalColumn = mapping.original.column;
 
                 if (mapping.name != null) {
-                    result += Base64VLQ.encode(this._names.indexOf(mapping.name) - previousName);
-                    previousName = this._names.indexOf(mapping.name);
+                    nameIdx = this._names.indexOf(mapping.name);
+                    result += Base64VLQ.encode(nameIdx - previousName);
+                    previousName = nameIdx;
                 }
             }
         }
