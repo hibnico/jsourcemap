@@ -254,7 +254,7 @@ public class SourceNode {
      * @param aSep
      *            The separator.
      */
-    void join(String aSep) {
+    public void join(String aSep) {
         List<Object> newChildren;
         int i;
         int len = this.children.size();
@@ -277,7 +277,7 @@ public class SourceNode {
      * @param aReplacement
      *            The thing to replace the pattern with.
      */
-    void replaceRight(String aPattern, String aReplacement) {
+    public void replaceRight(String aPattern, String aReplacement) {
         Object lastChild = this.children.get(this.children.size() - 1);
         if (lastChild instanceof SourceNode) {
             ((SourceNode) lastChild).replaceRight(aPattern, aReplacement);
@@ -296,7 +296,7 @@ public class SourceNode {
      * @param aSourceContent
      *            The content of the source file
      */
-    void setSourceContent(String aSourceFile, String aSourceContent) {
+    public void setSourceContent(String aSourceFile, String aSourceContent) {
         this.sourceContents.put(aSourceFile, aSourceContent);
     }
 
@@ -310,7 +310,7 @@ public class SourceNode {
      * @param aFn
      *            The traversal function.
      */
-    void walkSourceContents(SourceWalker walker) {
+    public void walkSourceContents(SourceWalker walker) {
         for (int i = 0, len = this.children.size(); i < len; i++) {
             if (this.children.get(i) instanceof SourceNode) {
                 ((SourceNode) this.children.get(i)).walkSourceContents(walker);
