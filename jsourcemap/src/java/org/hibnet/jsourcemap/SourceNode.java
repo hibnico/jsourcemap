@@ -173,7 +173,7 @@ public class SourceNode {
                 addMappingWithCode(node, aRelativePath, lastMapping[0], shiftNextLine(remainingLines));
             }
             // and add the remaining lines without any mapping
-            node.add(Util.join(remainingLines, ""));
+            node.add(Util.join(remainingLines, "\n"));
         }
 
         // Copy sourcesContent into SourceNode
