@@ -118,6 +118,9 @@ class ArraySet<T> {
         if (i == null) {
             return null;
         }
+        if (i >= _array.size()) {
+            return null;
+        }
         return _array.get(i);
     }
 

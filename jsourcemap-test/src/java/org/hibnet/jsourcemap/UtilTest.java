@@ -15,7 +15,7 @@
  */
 package org.hibnet.jsourcemap;
 
-import static org.hibnet.jsourcemap.TestUtil.assertEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
@@ -49,7 +49,7 @@ public class UtilTest {
         assertNull(Util.urlParse("a//b"));
         assertNull(Util.urlParse("/a"));
         assertNull(Util.urlParse("data:foo,bar"));
-    };
+    }
 
     @Test
     public void testNormalize() throws Exception {
@@ -87,7 +87,7 @@ public class UtilTest {
         assertEquals(Util.normalize("http://www.example.com"), "http://www.example.com");
         assertEquals(Util.normalize("http://www.example.com/"), "http://www.example.com/");
         assertEquals(Util.normalize("http://www.example.com/./..//a/b/c/.././d//"), "http://www.example.com/a/b/d/");
-    };
+    }
 
     @Test
     public void testJoin() throws Exception {
@@ -206,7 +206,7 @@ public class UtilTest {
 
         assertEquals(Util.join("http://www.example.com", "//foo.org/bar"), "http://foo.org/bar");
         assertEquals(Util.join("//www.example.com", "//foo.org/bar"), "//foo.org/bar");
-    };
+    }
 
     // TODO Issue #128: Define and test this function properly.
     @Test
@@ -225,6 +225,21 @@ public class UtilTest {
 
         assertEquals(Util.relative("/", "/the/root/one.js"), "the/root/one.js");
         assertEquals(Util.relative("/", "the/root/one.js"), "the/root/one.js");
-    };
+    }
 
+    @Test
+    public void testSubstr() throws Exception {
+        assertEquals("", Util.substr("", 0, 0));
+        assertEquals("", Util.substr("123456789", 3, 0));
+        assertEquals("4", Util.substr("123456789", 3, 1));
+        assertEquals("4567", Util.substr("123456789", 3, 4));
+        assertEquals("2", Util.substr("12", 1, 4));
+        assertEquals("", Util.substr("12", 1, -4));
+
+        assertEquals("", Util.substr("", 0));
+        assertEquals("123456789", Util.substr("123456789", 0));
+        assertEquals("456789", Util.substr("123456789", 3));
+        assertEquals("", Util.substr("123456789", 30));
+        assertEquals("123456789", Util.substr("123456789", -30));
+    }
 }

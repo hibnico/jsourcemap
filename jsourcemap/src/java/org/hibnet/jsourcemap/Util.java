@@ -37,6 +37,9 @@ class Util {
     }
 
     static final ParsedUrl urlParse(String aUrl) {
+        if (aUrl == null) {
+            return null;
+        }
         Matcher match = urlRegexp.matcher(aUrl);
         if (!match.matches()) {
             return null;
@@ -78,6 +81,9 @@ class Util {
     }
 
     static final String normalize(String aPath) {
+        if (aPath == null) {
+            return null;
+        }
         String path = aPath;
         ParsedUrl url = urlParse(aPath);
         if (url != null) {
@@ -362,4 +368,25 @@ class Util {
         System.arraycopy(array, start + nb, newArray, start, array.length - (start + nb));
         return newArray;
     }
+
+    static final String substr(String input, int start) {
+        if (start <= 0) {
+            return input;
+        }
+        if (start >= input.length()) {
+            return "";
+        }
+        return input.substring(start);
+    }
+
+    static final String substr(String input, int start, int length) {
+        if (length <= 0) {
+            return "";
+        }
+        if (start + length > input.length()) {
+            return input.substring(start);
+        }
+        return input.substring(start, start + length);
+    }
+
 }

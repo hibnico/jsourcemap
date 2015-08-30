@@ -31,9 +31,9 @@ public class SourceNode {
     // Newline character code for charCodeAt() comparisons
     private static final int NEWLINE_CODE = 10;
 
-    private List<Object> children;
+    private List<Object> children = new ArrayList<>();
 
-    private Map<String, String> sourceContents;
+    private Map<String, String> sourceContents = new HashMap<>();
 
     private Integer line;
 
@@ -58,25 +58,34 @@ public class SourceNode {
      * @param aName
      *            The original identifier.
      */
-    public SourceNode(Integer aLine, Integer aColumn, String aSource, String aName) {
-        this.children = new ArrayList<>();
-        this.sourceContents = new HashMap<>();
+    public SourceNode() {
+    }
+
+    public SourceNode(Integer aLine, Integer aColumn, String aSource, String aChunks, String aName) {
         this.line = aLine;
         this.column = aColumn;
         this.source = aSource;
         this.name = aName;
+        if (aChunks != null) {
+            add(aChunks);
+        }
+    }
+
+    public SourceNode(Integer aLine, Integer aColumn, String aSource, SourceNode aChunks, String aName) {
+        this.line = aLine;
+        this.column = aColumn;
+        this.source = aSource;
+        this.name = aName;
+        if (aChunks != null) {
+            add(aChunks);
+        }
     }
 
     private static String shiftNextLine(List<String> remainingLines) {
-        String lineContents = remainingLines.remove(0);
-        // The last line of a file might not have a newline.
-        String newLine;
         if (remainingLines.isEmpty()) {
-            newLine = "";
-        } else {
-            newLine = remainingLines.remove(0);
+            return null;
         }
-        return lineContents + newLine;
+        return remainingLines.remove(0) + "\n";
     }
 
     private static void addMappingWithCode(SourceNode node, String aRelativePath, Mapping mapping, String code) {
@@ -84,9 +93,7 @@ public class SourceNode {
             node.add(code);
         } else {
             String source = aRelativePath != null ? Util.join(aRelativePath, mapping.source) : mapping.source;
-            SourceNode newNode = new SourceNode(mapping.original.line, mapping.original.column, source, mapping.name);
-            newNode.add(code);
-            node.add(newNode);
+            node.add(new SourceNode(mapping.original.line, mapping.original.column, source, code, mapping.name));
         }
     }
 
@@ -103,13 +110,13 @@ public class SourceNode {
     public static SourceNode fromStringWithSourceMap(String aGeneratedCode, SourceMapConsumer aSourceMapConsumer, final String aRelativePath) {
         // The SourceNode we want to fill with the generated code
         // and the SourceMap
-        final SourceNode node = new SourceNode(null, null, null, null);
+        final SourceNode node = new SourceNode();
 
         // All even indices of this array are one line of the generated code,
         // while all odd indices are the newlines between two adjacent lines
         // (since `REGEX_NEWLINE` captures its match).
         // Processed fragments are removed from this array, by calling `shiftNextLine`.
-        List<String> remainingLines = Arrays.asList(REGEX_NEWLINE.split(aGeneratedCode));
+        List<String> remainingLines = new ArrayList<>(Arrays.asList(REGEX_NEWLINE.split(aGeneratedCode)));
 
         // We need to remember the position of "remainingLines"
         int[] lastGeneratedLine = new int[] { 1 };
@@ -135,8 +142,8 @@ public class SourceNode {
                     // Associate the code between "lastGeneratedColumn" and
                     // "mapping.generatedColumn" with "lastMapping"
                     String nextLine = remainingLines.get(0);
-                    String code = nextLine.substring(0, mapping.generated.column - lastGeneratedColumn[0]);
-                    remainingLines.set(0, nextLine.substring(mapping.generated.column - lastGeneratedColumn[0]));
+                    String code = Util.substr(nextLine, 0, mapping.generated.column - lastGeneratedColumn[0]);
+                    remainingLines.set(0, Util.substr(nextLine, mapping.generated.column - lastGeneratedColumn[0]));
                     lastGeneratedColumn[0] = mapping.generated.column;
                     addMappingWithCode(node, aRelativePath, lastMapping[0], code);
                     // No more remaining code, continue
@@ -153,8 +160,8 @@ public class SourceNode {
             }
             if (lastGeneratedColumn[0] < mapping.generated.column) {
                 String nextLine = remainingLines.get(0);
-                node.add(nextLine.substring(0, mapping.generated.column));
-                remainingLines.set(0, nextLine.substring(mapping.generated.column));
+                node.add(Util.substr(nextLine, 0, mapping.generated.column));
+                remainingLines.set(0, Util.substr(nextLine, mapping.generated.column));
                 lastGeneratedColumn[0] = mapping.generated.column;
             }
             lastMapping[0] = mapping;
