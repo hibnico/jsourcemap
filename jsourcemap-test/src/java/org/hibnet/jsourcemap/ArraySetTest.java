@@ -150,6 +150,6 @@ public class ArraySetTest {
         set.add("baz");
         set.add("baz", true);
 
-        assertEquals(set.size(), 6);
+        assertEquals(set.size(), 3);
     }
 }

@@ -51,7 +51,7 @@ class ArraySet<T> {
      * @returns Number
      */
     int size() {
-        return _array.size();
+        return _set.size();
     }
 
     /**
