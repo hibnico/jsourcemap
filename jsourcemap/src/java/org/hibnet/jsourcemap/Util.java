@@ -15,8 +15,10 @@
  */
 package org.hibnet.jsourcemap;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -214,14 +216,6 @@ class Util {
         return join(level + 1, "../") + aPath.substring(aRoot.length() + 1);
     }
 
-    static String toSetString(String aStr) {
-        return '$' + aStr;
-    }
-
-    static String fromSetString(String aStr) {
-        return aStr.substring(1);
-    }
-
     // mimic the behaviour of i1 - i2 in JS
     private static final int intcmp(Integer i1, Integer i2) {
         if (i1 == null && i2 == null) {
@@ -389,4 +383,29 @@ class Util {
         return input.substring(start, start + length);
     }
 
+    static final List<String> split(String input, Pattern pattern) {
+        int index = 0;
+        ArrayList<String> matchList = new ArrayList<>();
+        Matcher m = pattern.matcher(input);
+
+        // Add segments before each match found
+        while (m.find()) {
+            String match = input.subSequence(index, m.start()).toString();
+            matchList.add(match);
+            index = m.end();
+            for (int i = 0; i < m.groupCount(); i++) {
+                matchList.add(m.group(i + 1));
+            }
+        }
+
+        // If no match was found, return this
+        if (index == 0) {
+            return Arrays.asList(input);
+        }
+
+        // Add remaining segment
+        matchList.add(input.subSequence(index, input.length()).toString());
+
+        return matchList;
+    }
 }

@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 public class SourceNode {
@@ -31,7 +32,7 @@ public class SourceNode {
     // Newline character code for charCodeAt() comparisons
     private static final int NEWLINE_CODE = 10;
 
-    private List<Object> children = new ArrayList<>();
+    List<Object> children = new ArrayList<>();
 
     private Map<String, String> sourceContents = new HashMap<>();
 
@@ -61,17 +62,11 @@ public class SourceNode {
     public SourceNode() {
     }
 
-    public SourceNode(Integer aLine, Integer aColumn, String aSource, String aChunks, String aName) {
-        this.line = aLine;
-        this.column = aColumn;
-        this.source = aSource;
-        this.name = aName;
-        if (aChunks != null) {
-            add(aChunks);
-        }
+    public SourceNode(Integer aLine, Integer aColumn, String aSource, Object aChunks) {
+        this(aLine, aColumn, aSource, aChunks, null);
     }
 
-    public SourceNode(Integer aLine, Integer aColumn, String aSource, SourceNode aChunks, String aName) {
+    public SourceNode(Integer aLine, Integer aColumn, String aSource, Object aChunks, String aName) {
         this.line = aLine;
         this.column = aColumn;
         this.source = aSource;
@@ -82,10 +77,15 @@ public class SourceNode {
     }
 
     private static String shiftNextLine(List<String> remainingLines) {
+        String lineContents = remainingLines.remove(0);
+        // The last line of a file might not have a newline.
+        String newLine;
         if (remainingLines.isEmpty()) {
-            return null;
+            newLine = "";
+        } else {
+            newLine = remainingLines.remove(0);
         }
-        return remainingLines.remove(0) + "\n";
+        return lineContents + newLine;
     }
 
     private static void addMappingWithCode(SourceNode node, String aRelativePath, Mapping mapping, String code) {
@@ -116,7 +116,7 @@ public class SourceNode {
         // while all odd indices are the newlines between two adjacent lines
         // (since `REGEX_NEWLINE` captures its match).
         // Processed fragments are removed from this array, by calling `shiftNextLine`.
-        List<String> remainingLines = new ArrayList<>(Arrays.asList(REGEX_NEWLINE.split(aGeneratedCode)));
+        List<String> remainingLines = new ArrayList<>(Util.split(aGeneratedCode, REGEX_NEWLINE));
 
         // We need to remember the position of "remainingLines"
         int[] lastGeneratedLine = new int[] { 1 };
@@ -158,7 +158,7 @@ public class SourceNode {
                 node.add(shiftNextLine(remainingLines));
                 lastGeneratedLine[0]++;
             }
-            if (lastGeneratedColumn[0] < mapping.generated.column) {
+            if (lastGeneratedColumn[0] < mapping.generated.column && !remainingLines.isEmpty()) {
                 String nextLine = remainingLines.get(0);
                 node.add(Util.substr(nextLine, 0, mapping.generated.column));
                 remainingLines.set(0, Util.substr(nextLine, mapping.generated.column));
@@ -173,7 +173,7 @@ public class SourceNode {
                 addMappingWithCode(node, aRelativePath, lastMapping[0], shiftNextLine(remainingLines));
             }
             // and add the remaining lines without any mapping
-            node.add(Util.join(remainingLines, "\n"));
+            node.add(Util.join(remainingLines, ""));
         }
 
         // Copy sourcesContent into SourceNode
@@ -196,9 +196,23 @@ public class SourceNode {
      * @param aChunk
      *            A string snippet of generated JS code, another instance of SourceNode, or an array where each member is one of those things.
      */
-    public void add(List<String> aChunk) {
-        aChunk.forEach(chunk -> {
-            this.add(chunk);
+    public void add(Object... aChunk) {
+        List<Object> list;
+        if (aChunk.length == 1 && aChunk[0] instanceof List) {
+            @SuppressWarnings("unchecked")
+            List<Object> l = (List<Object>) aChunk[0];
+            list = l;
+        } else {
+            list = Arrays.asList(aChunk);
+        }
+        list.forEach(chunk -> {
+            if (chunk instanceof String) {
+                this.add((String) chunk);
+            } else if (chunk instanceof SourceNode) {
+                this.add((SourceNode) chunk);
+            } else {
+                throw new IllegalArgumentException();
+            }
         });
     }
 
@@ -216,9 +230,15 @@ public class SourceNode {
      * @param aChunk
      *            A string snippet of generated JS code, another instance of SourceNode, or an array where each member is one of those things.
      */
-    public void prepend(List<String> aChunk) {
-        for (int i = aChunk.size() - 1; i >= 0; i--) {
-            this.prepend(aChunk.get(i));
+    public void prepend(Object... aChunk) {
+        for (int i = aChunk.length - 1; i >= 0; i--) {
+            if (aChunk[i] instanceof String) {
+                this.prepend((String) aChunk[i]);
+            } else if (aChunk[i] instanceof SourceNode) {
+                this.prepend((SourceNode) aChunk[i]);
+            } else {
+                throw new IllegalArgumentException();
+            }
         }
     }
 
@@ -284,14 +304,14 @@ public class SourceNode {
      * @param aReplacement
      *            The thing to replace the pattern with.
      */
-    public void replaceRight(String aPattern, String aReplacement) {
+    public void replaceRight(Pattern aPattern, String aReplacement) {
         Object lastChild = this.children.get(this.children.size() - 1);
         if (lastChild instanceof SourceNode) {
             ((SourceNode) lastChild).replaceRight(aPattern, aReplacement);
         } else if (lastChild instanceof String) {
-            this.children.set(this.children.size() - 1, ((String) lastChild).replaceFirst(aPattern, aReplacement));
+            this.children.set(this.children.size() - 1, aPattern.matcher(((String) lastChild)).replaceFirst(aReplacement));
         } else {
-            this.children.add("".replaceFirst(aPattern, aReplacement));
+            this.children.add(aPattern.matcher("").replaceFirst(aReplacement));
         }
     }
 
@@ -324,9 +344,8 @@ public class SourceNode {
             }
         }
 
-        List<String> sources = new ArrayList<>(this.sourceContents.keySet());
-        for (int i = 0, len = sources.size(); i < len; i++) {
-            walker.walk(sources.get(i), this.sourceContents.get(sources.get(i)));
+        for (Entry<String, String> entry : this.sourceContents.entrySet()) {
+            walker.walk(entry.getKey(), entry.getValue());
         }
     }
 
@@ -355,8 +374,8 @@ public class SourceNode {
         this.walk((chunk, original) -> {
             generatedCode.append(chunk);
             if (original.source != null && original.line != null && original.column != null) {
-                if (original.source.equals(lastOriginalSource[0]) || lastOriginalLine[0] != original.line || lastOriginalColumn[0] != original.column
-                        || (original.name != null && original.name.equals(lastOriginalName[0]))) {
+                if (!original.source.equals(lastOriginalSource[0]) || lastOriginalLine[0] != original.line || lastOriginalColumn[0] != original.column
+                        || (original.name == null ? lastOriginalName[0] != null : !original.name.equals(lastOriginalName[0]))) {
                     map.addMapping(new Mapping(new Position(generatedLine[0], generatedColumn[0]), new Position(original.line, original.column),
                             original.source, original.name));
                 }

@@ -120,11 +120,11 @@ public class SourceMapGenerator {
             if (this._sourcesContents == null) {
                 this._sourcesContents = new HashMap<>();
             }
-            this._sourcesContents.put(Util.toSetString(source), aSourceContent);
+            this._sourcesContents.put(source, aSourceContent);
         } else if (this._sourcesContents != null) {
             // Remove the source file from the _sourcesContents map.
             // If the _sourcesContents map is empty, set the property to null.
-            this._sourcesContents.remove(Util.toSetString(source));
+            this._sourcesContents.remove(source);
             if (this._sourcesContents.isEmpty()) {
                 this._sourcesContents = null;
             }
@@ -282,8 +282,7 @@ public class SourceMapGenerator {
             if (aSourceRoot != null) {
                 source = Util.relative(aSourceRoot, source);
             }
-            String key = Util.toSetString(source);
-            return this._sourcesContents.get(key);
+            return this._sourcesContents.get(source);
         }).collect(Collectors.toList());
     }
 

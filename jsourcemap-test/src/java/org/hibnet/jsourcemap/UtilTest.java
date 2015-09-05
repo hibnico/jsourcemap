@@ -18,6 +18,9 @@ package org.hibnet.jsourcemap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import java.util.Arrays;
+import java.util.regex.Pattern;
+
 import org.junit.Test;
 
 public class UtilTest {
@@ -241,5 +244,16 @@ public class UtilTest {
         assertEquals("456789", Util.substr("123456789", 3));
         assertEquals("", Util.substr("123456789", 30));
         assertEquals("123456789", Util.substr("123456789", -30));
+    }
+
+    @Test
+    public void testSplit() throws Exception {
+        assertEquals(Arrays.asList(""), Util.split("", Pattern.compile("")));
+        assertEquals(Arrays.asList("a", "cde"), Util.split("abcde", Pattern.compile("b")));
+        assertEquals(Arrays.asList("a", "b", "cde"), Util.split("abcde", Pattern.compile("(b)")));
+        assertEquals(Arrays.asList("", "bcde"), Util.split("abcde", Pattern.compile("a")));
+        assertEquals(Arrays.asList("", "a", "bcde"), Util.split("abcde", Pattern.compile("(a)")));
+        assertEquals(Arrays.asList("ab", "\n", "cde"), Util.split("ab\ncde", Pattern.compile("(\r?\n)")));
+        assertEquals(Arrays.asList("ab", "\n", "cde", "\r\n", ""), Util.split("ab\ncde\r\n", Pattern.compile("(\r?\n)")));
     }
 }

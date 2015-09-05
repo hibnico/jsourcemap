@@ -26,7 +26,7 @@ public class Code {
         this.map = map;
     }
 
-    public String getSource() {
+    public String getCode() {
         return source;
     }
 
