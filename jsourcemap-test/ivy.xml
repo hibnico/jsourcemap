@@ -15,7 +15,7 @@
     limitations under the License.
 -->
 <ivy-module version="2.0">
-    <info organisation="org.hibnet" module="jsourcemap-test" revision="0.0.4">
+    <info organisation="org.hibnet" module="jsourcemap-test" revision="0.0.5">
         <description>This module contains the unit tests for the jSourceMap library</description>
     </info>
     <dependencies defaultconf="default->default">
